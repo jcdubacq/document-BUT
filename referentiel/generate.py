@@ -760,6 +760,14 @@ class ExempleSAE(DataBlob):
         self.sae_id=sae_id
     def getSynopsis(self):
         return self._getData('synopsis')
+    def getProb(self):
+        return self._getData('prob')
+    def getForm(self):
+        return self._getData('form')
+    def getDesc(self):
+        return self._getData('form')
+    def getEval(self):
+        return self._getData('eval')
     def getTitre(self):
         return self._getData('titre')[0]
 

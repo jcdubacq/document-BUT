@@ -74,6 +74,16 @@ Liste d'exemples de SAÉ~:
 \begin{itemize}[nosep,topsep=0pt,label=\textbullet,leftmargin=1pc,labelsep=*]
   %% for ex in exemples
 \item Exemple~\VAR{ex.getId()|le} \textbf{[\VAR{ex.getTitre()|le}]}~: \VAR{ex.getSynopsis()|le|join('\n\n')}
+  %% if ex.getForm()|le|join|length > 0
+  (formats pédagogique possibles : \VAR{ex.getForm()|elegantjoin|le})
+  %% endif
+\par
+  %%if ex.getProb()|le|join|length > 0
+  ---~Problématique professionnelle~: \VAR{ex.getProb()|le|join}\par
+  %% endif
+  %%if ex.getEval()|le|join|length > 0
+  ---~Préconisations d'évaluation~: \VAR{ex.getEval()|le|join}\par
+  %% endif
   %% endfor
 \end{itemize}
 %% endif
