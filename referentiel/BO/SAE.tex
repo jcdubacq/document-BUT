@@ -1,0 +1,79 @@
+% # context : data, utils, sae
+\newpage
+\section{ANNEXE C --- fiche SAÉ \VAR{sae.getId()|le} \emph{\VAR{sae.getShorttxt()|le}}}\label{FICHE-\VAR{sae.getId()|le}}
+%% set comps=sae.getCompObjects()
+%% set compplural=utils.formatObjects('`isPlural`',sae.getCompObjects(),toFloat=True)|sum
+%% set apcplural=utils.formatObjects('`isPlural`',sae.getAPCObjects(),toFloat=True)|sum
+%% set source=data.getHoursBlock(sae.getId())
+%% set resstot=source.sumIn(['TP','TD'])-source.sumOut(['TP','TD'])
+%% set resstp=source.sumIn(['TP'])-source.sumOut(['TP'])
+%% set ressproj=source.sumIn(['PROJ'])-source.sumOut(['PROJ'])
+%% set precos=sae.getPrecoList()
+%% set livrables=sae.getLivrableList()
+%% set semestres=sae.getSemestreList()
+%% set exemples=sae.getExempleObjects()
+%% set t=2
+%% set dimens={'oneinmany':'{0:.3f}mm'.format((190.0-(t+1)*0.2-t*4.0)/t),'allbutoneinmany':'{0:.3f}mm'.format((190.0-3*0.2-2*4.0)-(190.0-(t+1)*0.2-t*4.0)/t),'all':'{0:.3f}mm'.format((190.0-2*0.2-1*4.0)/1)}
+\begin{center}%
+  \begin{tabular}{|p{\VAR{dimens['oneinmany']}}|p{\VAR{dimens['oneinmany']}}|}\hline
+    Nom de la SAÉ & \VAR{sae.getId()|le}~\VAR{sae.getLongtxt()|le} \\\hline
+    Compétence\VAR{'s' if compplural>1 else ''} visée\VAR{'s' if compplural>1 else ''}
+                  & %
+                  %% for c in sae.getCompObjects()
+                  %% if c.isPlural() > 1
+                    \VAR{c.getLongtxt()|le}
+                    %% else
+                    Compétence~\VAR{c.getNum()|le}~: \VAR{c.getLongtxt()|le}%
+                    %% endif
+                    \BLOCK{if not loop.last}\BLOCK{if loop.index==loop.length}{} et \BLOCK{else}, \BLOCK{endif}\BLOCK{endif}
+                    %% endfor
+    \\\hline
+    Description des objectifs de la SAÉ et de la problématique professionnelle associée & \VAR{sae.getDescriptionList()|le|join('\\par')} \\\hline
+    Apprentissage\VAR{'s' if apcplural>1 else ''} critique\VAR{'s' if apcplural>1 else ''} couvert\VAR{'s' if apcplural>1 else ''}
+                  & %
+                  %% for c in sae.getAPCObjects()
+                  %% if c.isPlural() > 1
+                    \VAR{c.getLongtxt()|le}
+                    %% else
+                    C\VAR{c.getCompNum()|le}~APC\VAR{c.getNum()|le}~: \VAR{c.getLongtxt()|le}%
+                    %% endif
+                    \BLOCK{if not loop.last}\par{}\BLOCK{endif}
+                    %% endfor
+    \\\hline
+    Heures formation (dont TP) & \VAR{resstot|hours} (dont \VAR{resstp|hours} de TP)\\\hline
+    Heures \og projet tutoré \fg (dont TP) & \VAR{ressproj|hours} %
+    %% if precos|length>0
+    (préconisation\VAR{'s' if precos.__len__()>1 else ''}~: \VAR{precos|elegantjoin|le})
+    %% endif
+    \\\hline
+    Liste des ressources mobilisées et combinées &
+    %% for ress in sae.getRessourceObjects()
+    \hyperref[FICHE-\VAR{ress.getId()|le}]{\VAR{ress.getId()|le}~\VAR{ress.getLongtxt()|le}}
+    %% if not loop.last
+    \par
+    %% endif
+    %% else
+    ---
+    %% endfor
+    \\\hline
+    Types de livrable ou de production &%
+    %% if livrables|length>0
+    \begin{itemize}[nosep,topsep=0pt,label=\textbullet,leftmargin=1pc,labelsep=*]
+      %% for l in livrables
+    \item \VAR{l|le}
+      %% endfor
+    \end{itemize}%
+    %% endif
+    \\\hline
+    Semestre\VAR{'s' if semestres.__len__()>1 else ''} & \VAR{semestres|elegantjoin|le} \\\hline
+  \end{tabular}
+\end{center}
+\fancyfoot[R]{2021\\\VAR{data.getId()|le} (parcours \VAR{sae.getParcoursLettres()|elegantjoin|le})}
+%% if exemples|length>0
+Liste d'exemples de SAÉ~:
+\begin{itemize}[nosep,topsep=0pt,label=\textbullet,leftmargin=1pc,labelsep=*]
+  %% for ex in exemples
+\item Exemple~\VAR{ex.getId()|le} \textbf{[\VAR{ex.getTitre()|le}]}~: \VAR{ex.getSynopsis()|le|join('\n\n')}
+  %% endfor
+\end{itemize}
+%% endif

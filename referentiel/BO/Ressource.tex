@@ -1,0 +1,100 @@
+% # context : data, utils, ress
+\newpage
+\section{ANNEXE D --- fiche Ressource \VAR{ress.getId()|le}~\emph{\VAR{ress.getShorttxt()|le}}}\label{FICHE-\VAR{ress.getId()|le}}
+%% set year=utils.semestre2year(ress.getSemestreList()[0])|le
+%% set comps=data.getPossibleCompObjects(ress.getParcoursObjects(),year)
+%% set t=comps.__len__()
+%% set dimens={'oneinmany':'{0:.3f}mm'.format((190.0-(t+1)*0.2-t*4.0)/t),'allbutoneinmany':'{0:.3f}mm'.format((190.0-3*0.2-2*4.0)-(190.0-(t+1)*0.2-t*4.0)/t),'all':'{0:.3f}mm'.format((190.0-2*0.2-1*4.0)/1)}
+%% set tabularformat='|'+('>{\\centering\\arraybackslash}p{'+dimens['oneinmany']+'}|')*t
+%% set mconeleft='\\multicolumn{1}{|>{\\bfseries\\RaggedRight\\arraybackslash}p{'+dimens['oneinmany']+'}|}'
+%% set mcallright='\\multicolumn{'+'{0}'.format(t-1)+'}{>{\\RaggedRight\\arraybackslash}p{'+dimens['allbutoneinmany']+'}|}'
+%% set mcone='\\multicolumn{'+'{0}'.format(t)+'}{|>{\\bfseries\\centering\\arraybackslash}p{'+dimens['all']+'}|}'
+%% set semestres=ress.getSemestreList()
+%% set goodapc=ress.getAPCObjects()
+%% set allsaes=data.getSAEObjects()
+%% set source=data.getHoursBlock(ress.getId())
+%% set resstot=source.sumIn(['TP','TD'])-source.sumOut(['TP','TD'])
+%% set resstp=source.sumIn(['TP'])-source.sumOut(['TP'])
+%% set ressproj=source.sumIn(['PROJ'])-source.sumOut(['PROJ'])
+
+\begin{center}
+  \begin{tabular}{\VAR{tabularformat}}\hline
+    \VAR{mconeleft}{Nom} & \VAR{mcallright}{\VAR{ress.getLongtxt()|le}}\\\hline
+    \VAR{mconeleft}{Semestre}\VAR{'s' if semestres.__len__()>1 else ''} & \VAR{mcallright}{\VAR{semestres|elegantjoin|le}}\\\hline
+    \VAR{mcone}{Compétences ciblées}\\\hline
+    \VAR{utils.formatObjects('Compétence `getNum`',comps)|le|join(' & ')}
+    \\\hline
+    %% for c in comps
+    %% for apc in goodapc if apc.getCompId()==c.getId()
+    %% if loop.first
+    \VAR{c.getNiveauDict(year).values()|elegantjoin|le}
+    %% endif
+    %% endfor
+    %% if not loop.last
+                         &
+                         %% endif
+                         %% endfor
+    \\\hline
+    \VAR{mcone}{Apprentissages critiques}\\\hline
+    %% for c in comps
+    %% for apc in goodapc if apc.getCompId()==c.getId()
+    %% if not loop.first
+    \par
+    %% endif
+    \textbf{APC \VAR{apc.getNum()|le}} \VAR{apc.getLongtxt()|le}
+    %% endfor
+    %% if not loop.last
+                         &
+                         %% endif
+                         %% endfor
+    \\\hline
+    \VAR{mconeleft}{SAÉ concernées} & \VAR{mcallright}{
+      %% for sae in allsaes if ress in sae.getRessourceObjects()
+                                      \hyperref[FICHE-\VAR{sae.getId()|le}]{\VAR{sae.getId()|le}~\VAR{sae.getLongtxt()|le}}
+                                      %% if not loop.last
+                                      \par
+                                      %% endif
+                                      %% else
+                                      ---
+                                      %% endfor
+                                      }\\\hline
+    \VAR{mconeleft}{Prérequis} & \VAR{mcallright}{
+      %% for prq in ress.getPrerequisObjects()
+                                 \hyperref[FICHE-\VAR{prq.getId()|le}]{\VAR{prq.getId()|le}~\VAR{prq.getLongtxt()|le}}
+                                 %% if not loop.last
+                                 ;
+                                 %% endif
+                                 %% else
+                                 ---
+                                 %% endfor
+                                 }\\\hline
+    
+    \VAR{mconeleft}{Descriptif\par détaillé}
+                         &\VAR{mcallright}{
+                           \VAR{ress.getObjectifList()|le|join('\\par\n')}
+                           %% set sav=ress.getSavoirsList()
+                           %% if sav|length>0
+    Les savoirs de référence suivants devront être étudiés :
+    \begin{itemize}[nosep,topsep=0pt,label=\textbullet,leftmargin=1pc,labelsep=*]
+      %% for s in sav
+    \item \VAR{s|le}
+      %% endfor
+    \end{itemize}
+    %% endif
+    \VAR{ress.getDescriptionList()|le|join('\\par\n')}
+    }\\\hline 
+    \VAR{mconeleft}{Mots clés}
+                         & \VAR{mcallright}{
+                           %% set keywords=ress.getKeywordsList()
+                           %% if keywords|length > 0
+                           \VAR{keywords|join(', ')|le}
+                           %% else
+                           ---
+                           %% endif
+                           }\\\hline
+    \VAR{mconeleft}{Heures de formation} & \VAR{mcallright}{
+                                           \VAR{resstot|hours} (dont \VAR{resstp|hours} de TP)
+                                           }\\\hline
+  \end{tabular}
+\end{center}
+\fancyfoot[R]{2021\\\VAR{data.getId()|le} (parcours \VAR{ress.getParcoursLettres()|elegantjoin|le})}

@@ -1,0 +1,76 @@
+%# context : data, utils, sem, parcours
+%% set year=utils.semestre2year(sem)
+\newpage
+\begin{center}
+  {
+    \fontsize{24}{36}\fontspec{Arial}\bfseries
+    Horaires S\VAR{sem|le} — Parcours \VAR{parcours.getLettreList()|elegantjoin|le}
+  }\\
+  \large
+  \VAR{parcours.getNameList()|elegantjoin|le}
+\end{center}
+%% for subparc in data.getParcoursObjects(semestre=sem,interparcours=parcours)
+\begin{center}
+  Éléments \VAR{'communs aux' if subparc.isPlural()>1 else 'spécifiques du'} parcours \VAR{subparc.getLettreList()|elegantjoin|le}\par
+  \begin{tabular}{|c|l|p{100mm}|H|H|c|}\hline
+    Page & \textbf{Code} & \textbf{Nom} & \multicolumn{3}{c|}{\textbf{Heures}}  \\\cline{4-6}
+    ~ & ~ & ~ & \multicolumn{1}{c|}{CM/TD/TP} & \multicolumn{1}{c|}{TP}  & \multicolumn{1}{c|}{Projet}  \\\hline
+    %% set lr=data.getRessourceObjects(semestre=sem,parcours=subparc)
+    %% if lr|length>0
+    \multicolumn{6}{|c|}{\textbf{Ressources}}\\\hline
+    %% for ress in lr
+    %% set source=data.getHoursBlock(ress.getId())
+    %% set resstot=source.sumIn(['TP','TD'])-source.sumOut(['TP','TD'])
+    %% set resstp=source.sumIn(['TP'])-source.sumOut(['TP'])
+    %% set ressproj=source.sumIn(['PROJ'])-source.sumOut(['PROJ'])
+    \pageref{FICHE-\VAR{ress.getId()|le}} & \VAR{ress.getId()|le} & \VAR{ress.getLongtxt()|le} & \VAR{resstot|hours} & \VAR{resstp|hours} & \VAR{ressproj|hours}  \\\hline
+    %% endfor
+    %% set resstot=data.sumIn(lr,['TP','TD'])-data.sumOut(lr,['TP','TD'])
+    %% set resstp=data.sumIn(lr,['TP'])-data.sumOut(lr,['TP'])
+    %% set ressproj=data.sumIn(lr,['PROJ'])-data.sumOut(lr,['PROJ'])
+    %% set ressh=resstot+ressproj
+    \multicolumn{3}{|>\bfseries l|}{Total des ressources du S\VAR{sem|le} parcours \VAR{subparc.getLettreList()|elegantjoin|le}} \llap{\textbf{\VAR{ressh|hours}}\hspace*{5mm}}&\VAR{resstot|hours}&\VAR{resstp|hours}&\VAR{ressproj|hours}\\\hline
+    %% endif
+    %% set ls=data.getSAEObjects(semestre=sem,parcours=subparc)
+    %% if ls|length>0
+    \multicolumn{6}{|c|}{\textbf{SAÉ}}\\\hline
+    %% for ress in ls
+    %% set source=data.getHoursBlock(ress.getId())
+    %% set resstot=source.sumIn(['TP','TD'])-source.sumOut(['TP','TD'])
+    %% set resstp=source.sumIn(['TP'])-source.sumOut(['TP'])
+    %% set ressproj=source.sumIn(['PROJ'])-source.sumOut(['PROJ'])
+    \pageref{FICHE-\VAR{ress.getId()|le}} & \VAR{ress.getId()} & \VAR{ress.getLongtxt()|le} & \VAR{resstot|hours} & \VAR{resstp|hours} & \VAR{ressproj|hours} \\\hline
+    %% endfor
+    %% set resstot=data.sumIn(ls,['TP','TD'])-data.sumOut(ls,['TP','TD'])
+    %% set resstp=data.sumIn(ls,['TP'])-data.sumOut(ls,['TP'])
+    %% set ressproj=data.sumIn(ls,['PROJ'])-data.sumOut(ls,['PROJ'])
+    %% set ressh=resstot+ressproj
+    \multicolumn{3}{|>\bfseries l|}{Total des SAÉ du S\VAR{sem|le} parcours \VAR{subparc.getLettreList()|elegantjoin|le}} \llap{\textbf{\VAR{ressh|hours}}\hspace*{5mm}}&\VAR{resstot|hours}&\VAR{resstp|hours}&\VAR{ressproj|hours}\\\hline
+    %% endif
+    %% set resstot=data.sumIn(ls+lr,['TP','TD'])-data.sumOut(ls+lr,['TP','TD'])
+    %% set resstp=data.sumIn(ls+lr,['TP'])-data.sumOut(ls+lr,['TP'])
+    %% set ressproj=data.sumIn(ls+lr,['PROJ'])-data.sumOut(ls+lr,['PROJ'])
+    %% set ressh=resstot+ressproj
+    \hline
+    \multicolumn{3}{|>\bfseries l|}{Total du S\VAR{sem|le} parcours \VAR{subparc.getLettreList()|elegantjoin|le}} \llap{\textbf{\VAR{ressh|hours}}\hspace*{5mm}}&\VAR{resstot|hours}&\VAR{resstp|hours}&\VAR{ressproj|hours}\\\hline
+    %% if sem|int is even
+    %% set semint=sem|int
+    %% set othersem=(semint-1)|string
+    %% set lr=data.getRessourceObjects(semestre=othersem,parcours=subparc)
+    %% set ls=data.getSAEObjects(semestre=othersem,parcours=subparc)
+    %% set resstot=data.sumIn(ls+lr,['TP','TD'])-data.sumOut(ls+lr,['TP','TD'])
+    %% set resstp=data.sumIn(ls+lr,['TP'])-data.sumOut(ls+lr,['TP'])
+    %% set ressproj=data.sumIn(ls+lr,['PROJ'])-data.sumOut(ls+lr,['PROJ'])
+    %% set ressh=resstot+ressproj
+    \multicolumn{3}{|>\bfseries l|}{Total du S\VAR{othersem|le} parcours \VAR{subparc.getLettreList()|elegantjoin|le} (rappel)} \llap{\textbf{\VAR{ressh|hours}}\hspace*{5mm}}&\VAR{resstot|hours}&\VAR{resstp|hours}&\VAR{ressproj|hours}\\\hline
+    %% set lr=data.getRessourceObjects(year=year,parcours=subparc)
+    %% set ls=data.getSAEObjects(year=year,parcours=subparc)
+    %% set resstot=data.sumIn(ls+lr,['TP','TD'])-data.sumOut(ls+lr,['TP','TD'])
+    %% set resstp=data.sumIn(ls+lr,['TP'])-data.sumOut(ls+lr,['TP'])
+    %% set ressproj=data.sumIn(ls+lr,['PROJ'])-data.sumOut(ls+lr,['PROJ'])
+    %% set ressh=resstot+ressproj
+    \multicolumn{3}{|>\bfseries l|}{Total de l'année A\VAR{year|le} parcours \VAR{subparc.getLettreList()|elegantjoin|le}} \llap{\textbf{\VAR{ressh|hours}}\hspace*{5mm}}&\VAR{resstot|hours}&\VAR{resstp|hours}&\VAR{ressproj|hours}\\\hline
+    %% endif
+  \end{tabular}
+\end{center}
+%% endfor

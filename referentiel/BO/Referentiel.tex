@@ -1,0 +1,85 @@
+\documentclass[10pt]{article}
+\usepackage[LUC,T2A,T1]{fontenc}%
+\usepackage[utf8x]{inputenc}%
+\usepackage[verbose]{newunicodechar}
+\usepackage{fontspec}
+\usepackage[T1]{fontenc}
+% \usepackage{tikz}%
+% \usetikzlibrary{calc,fit,shapes,arrows,shadows.blur}%
+\usepackage{geometry}
+\usepackage[hidelinks]{hyperref}
+\usepackage{bookmark,graphicx}
+\usepackage{textcomp,tabularx,ragged2e}
+\usepackage{colortbl}%
+\usepackage{etoolbox}
+\usepackage{fancyhdr,dcolumn}
+\usepackage{enumitem}
+\def\hoursdisp#1h#2\relax{\makebox[1.5em]{\hfill #1}\hspace{1pt}h\hspace{1pt}\makebox[1em]{#2\hfill}}
+\newcolumntype{H}{>{\hoursdisp}c<{\relax\relax}}
+\usepackage[french]{babel}
+\geometry{a4paper,left=10mm,right=10mm,top=25 mm,bottom=25mm}
+\setmainfont{Arial}
+\makeatletter
+\newunicodechar{«}{\fontspec{Arial}\char"00AB\FB@guillspace\ignorespaces}
+\newunicodechar{»}{\unskip\FB@guillspace\fontspec{Arial}\char"00BB}
+\newunicodechar{©}{\fontspec{Arial}\char"00A9\unskip\,}
+\makeatother
+\fancyhf{}
+\setlength{\parindent}{0pt}
+\setlength{\tabcolsep}{2mm}\setlength{\arrayrulewidth}{.2mm}
+
+\showboxbreadth=\maxdimen
+\showboxdepth=\maxdimen
+% \usepackage[scale=.5,text=DOCUMENT~DE~TRAVAIL]{draftwatermark}
+\fancypagestyle{BO}{%
+  \fancyhf{}%
+  \fancyhead[L]{Version V3 pour soumission CNESER}
+  \fancyhead[R]{\today}
+  \fancyfoot[L]{©~Ministère de l'Enseignement supérieur, de la Recherche et de l'Innovation\\http://www.enseignementsup-recherche.gouv.fr}
+  \fancyfoot[R]{2021\\Informatique (parcours A, B, C et D)}
+  \renewcommand{\headrulewidth}{0pt}
+}
+
+\usepackage{titlesec}
+\titleformat{\section}{\normalfont\bfseries}{}{0em}{}
+\pagestyle{BO}
+\begin{document}
+
+\begin{center}
+  \vfill
+  \fontsize{32}{48}\bfseries\fontspec{Arial}
+  Référentiel de formation\\
+  \fontsize{24}{36}\fontspec{Arial}
+  Bachelor universitaire de technologie\\
+  Spécialité : \VAR{data.getId()}\\
+  \vfill
+  Semestres: \VAR{data.getSemestres()|elegantjoin|le}\\
+  Parcours: \VAR{utils.parcoursLettres(data.getParcoursObjects())|elegantjoin|le}
+  \vfill
+\end{center}
+
+%% for sem in data.getSemestres()
+%% for parcours in data.getParcoursObjects(semestre=sem,expanded=True) 
+%% include 'Index.tex'
+%% endfor
+%% endfor
+%% for sem in data.getSemestres()
+%% for parcours in data.getParcoursObjects(semestre=sem,expanded=True) 
+%% include 'Coeffs.tex'
+%% endfor
+%% endfor
+%% for year in data.getYears()
+%% for parcours in data.getParcoursObjects(year=year,expanded=True)
+%% include 'Matrice.tex'
+%% endfor
+%% endfor
+%% set ls=data.getSAEObjects()
+%% for sae in ls
+%% include 'SAE.tex'
+%% endfor
+%% set lr=data.getRessourceObjects()
+%% for ress in lr
+%% include 'Ressource.tex'
+%% endfor
+\end{document}
+
