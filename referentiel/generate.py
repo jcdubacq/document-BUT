@@ -9,6 +9,7 @@ import os
 from jinja2 import Template
 from locale import atof, setlocale, LC_NUMERIC
 setlocale(LC_NUMERIC, 'C')
+from collections import deque
 
 doc=None
 
@@ -119,14 +120,57 @@ utils={'parcoursLettres': parcoursLettres,'hours': hours2string,'formatObjects':
 
 class Printer:
     def __init__(self,REF,mode):
+        self.queue=deque()
+        self.done=deque()
         self.REF=REF
         self.path=os.path.abspath(os.path.join('.',mode))
-        self.outpath=os.path.abspath(os.path.join('.','output','mode'))
+        self.outpath=os.path.abspath(os.path.join('.','output',mode))
         if not os.path.exists(self.outpath):
             os.makedirs(self.outpath)
-        self.s=''
-        self.out=os.path.join('.',mode,mode+'.tex')
-        self.latex_jinja_env = jinja2.Environment(
+        self._specific()
+        self.jinja_env.filters['elegantjoin']=elegantjoin
+        self.jinja_env.filters['le']=LaTeXEscape
+        self.jinja_env.filters['hours']=hours2string
+        self.jinja_env.filters['merge']=merge
+    def _specific(self):
+        pass
+    def addTemplate(self,name,subject,dictionary={}):
+        self.queue.append([name,subject,dictionary])
+    def runOne(self):
+        global utils
+        if not self.queue:
+            return False
+        one=self.queue.popleft()
+        onebase=one[0]
+        onebasestripped=re.sub(self.suffix,'',onebase)
+        onesubject=one[1]
+        onedict=one[2]
+        filename=self.REF.getShortId()+'_'+onebasestripped+'_'+onesubject.getShortId()+self.suffix
+        outpath=os.path.join(self.outpath,filename)
+        onedict['data']=self.REF
+        onedict['subject']=onesubject
+        onedict['utils']=utils
+        with open(outpath,"w") as f:
+            template = self.jinja_env.get_template(onebase)
+            output=template.render(**onedict)
+            print(output,file=f)
+        return outpath
+    def run(self):
+        self.prologue()
+        while self.queue:
+            done=self.runOne()
+            self.done.append(done)
+            print(done)
+        self.epilogue()
+    def prologue(self):
+        pass
+    def epilogue(self):
+        pass
+
+class LaTeXPrinter(Printer):
+    def _specific(self):
+        self.suffix='.tex'
+        self.jinja_env = jinja2.Environment(
 	    block_start_string = '\BLOCK{',
 	    block_end_string = '}',
 	    variable_start_string = '\VAR{',
@@ -139,23 +183,15 @@ class Printer:
 	    autoescape = False,
 	    loader = jinja2.FileSystemLoader(self.path)
         )
-        self.latex_jinja_env.filters['elegantjoin']=elegantjoin
-        self.latex_jinja_env.filters['le']=LaTeXEscape
-        self.latex_jinja_env.filters['hours']=hours2string
-        self.latex_jinja_env.filters['merge']=merge
-    def appendTemplate(self,template_name):
-        global utils
-        template = self.latex_jinja_env.get_template(template_name)
-        self.s += template.render(data=REF,utils=utils)
-    def appendFile(self):
-        with open(filename) as f:
-            for line in f.readlines():
-                self.s+=line.strip()
-    def out(self,a):
-        self.s+=a+'\n'
-    def close(self):
-        with open(self.out,"w") as f:
-            print(self.s,file=f)
+    def epilogue(self):
+        for texfile in self.done:
+            wd = os.getcwd()
+            dirname=os.path.dirname(texfile)
+            os.chdir(dirname)
+            subprocess.check_call(["lualatex",texfile])
+            os.chdir(wd)
+            
+        
 
 class DataBlob:
     _blob="DataBlob"
@@ -167,6 +203,8 @@ class DataBlob:
         return '<Object '+type(self)._blob+' '+str(self.id)+'>'
     def getId(self):
         return self.id
+    def getShortId(self):
+        return re.sub(r'[- ._]','',self.id)
     def isPlural(self):
         return 1
     def addInfo(self,infotype: str,infovalue):
@@ -355,8 +393,11 @@ class TransversalAPC(APC):
 class Referentiel:
     def debug(self,a):
         print(str(a))
-    def __init__(self,name: str):
+    def __init__(self,name: str,shortname=None):
         self.name=name
+        self.shortname=name
+        if shortname != None:
+            self.shortname=name
         self.COMP={}
         self.PARCOURS={}
         self.SAE={}
@@ -366,12 +407,12 @@ class Referentiel:
         self.COMP['TRANSVERSAL']=TransversalComp()
         self.APC['TRANSVERSAL']=TransversalAPC(self.COMP['TRANSVERSAL'])
         self.printer=[]
-    def print(self, p: Printer):
-        p.appendTemplate('Referentiel.tex')
     def addTroncCommun(self,id: str):
         self.PARCOURS[id]=ParcoursCommun(id,self.PARCOURS)
     def getId(self):
         return self.name
+    def getShortId(self):
+        return re.sub(r'[- ._]','',self.name)
     def getHoursBlock(self,k,fail=False):
         if k not in self.HOURS:
             if fail:
@@ -893,8 +934,8 @@ class ReaderCSV:
 REF=Referentiel("Informatique")
 ReaderCSV(REF).readData()
 
-BO=Printer(REF,'BO')
-REF.print(BO)
-BO.close()
+BO=LaTeXPrinter(REF,'BO')
+BO.addTemplate('Referentiel.tex',REF,{})
+BO.run()
 
 sys.exit(0)
