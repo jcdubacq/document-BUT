@@ -134,8 +134,9 @@ class Printer:
         self.jinja_env.filters['merge']=merge
     def _specific(self):
         pass
-    def addTemplate(self,name,subject,dictionary={}):
-        self.queue.append([name,subject,dictionary])
+    def addTemplate(self,name,subjectstring,dictionary={}):
+        self.queue.append([name,subjectstring,dictionary])
+        return True
     def runOne(self):
         global utils
         if not self.queue:
@@ -145,11 +146,12 @@ class Printer:
         onebasestripped=re.sub(self.suffix,'',onebase)
         onesubject=one[1]
         onedict=one[2]
-        filename=self.REF.getShortId()+'_'+onebasestripped+'_'+onesubject.getShortId()+self.suffix
+        filename=self.REF.getShortId()+'_'+onebasestripped+'_'+str(onesubject)+self.suffix
         outpath=os.path.join(self.outpath,filename)
         onedict['data']=self.REF
         onedict['subject']=onesubject
         onedict['utils']=utils
+        onedict['printer']=self
         with open(outpath,"w") as f:
             template = self.jinja_env.get_template(onebase)
             output=template.render(**onedict)
@@ -190,7 +192,13 @@ class LaTeXPrinter(Printer):
             os.chdir(dirname)
             subprocess.check_call(["lualatex",texfile])
             os.chdir(wd)
-            
+class HTMLPrinter(Printer):
+    def _specific(self):
+        self.suffix='.html'
+        self.jinja_env = jinja2.Environment(
+	    trim_blocks = True,
+	    loader = jinja2.FileSystemLoader(self.path)
+        )
         
 
 class DataBlob:
@@ -942,8 +950,18 @@ class ReaderCSV:
 REF=Referentiel("Informatique")
 ReaderCSV(REF).readData()
 
-BO=LaTeXPrinter(REF,'BO')
-BO.addTemplate('Referentiel.tex',REF,{})
-BO.run()
+jobs=sys.argv
+if len(sys.argv)==1:
+    jobs=['BO','HTML']
+
+for arg in jobs:
+    if arg=='BO':
+        BO=LaTeXPrinter(REF,'BO')
+        BO.addTemplate('Referentiel.tex',REF.getId(),{})
+        BO.run()
+    elif arg=='HTML':
+        BOHtml=HTMLPrinter(REF,'HTMLBO')
+        BOHtml.addTemplate('Referentiel.html',REF.getId(),{})
+        BOHtml.run()
 
 sys.exit(0)
