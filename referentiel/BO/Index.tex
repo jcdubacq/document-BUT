@@ -20,7 +20,7 @@
     %% set ls=data.getSAEObjects(semestre=sem,parcours=subparc)
     %% for ll,lname,Lname in [(lr,'ressources','Ressources'),(ls,'SAÉ','SAÉ')]
     %% if ll|length>0
-    \multicolumn{6}{|c|}{\textbf{\VAR{Lname|title}}}\\\hline
+    \multicolumn{6}{|c|}{\textbf{\VAR{Lname}}}\\\hline
     %% for ress in ll
     %% set source=data.getHoursBlock(ress.getId())
     %% set resstot=source.sumIn(['TP','TD','PROJ'])-source.sumOut(['TP','TD','PROJ'])
