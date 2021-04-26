@@ -1,0 +1,55 @@
+{% set apcs=comp.getAPCObjects(year=year) %}
+{% set allcolumns=apcs.__len__()+2 %}
+<h1>{{data.getId()}} — Matrice APC — A{{year}} — Parcours {{parcours.getLettreList()|elegantjoin}} — Compétence C{{comp.getNum()}}</h1>
+<table>
+  <thead>
+    <tr>
+      <th rowspan="2">Ressource/SAÉ</th>
+      <th rowspan="2">Coeff.</th>
+      {% for apc in apcs %}
+      <th style="width: 25mm">APC {{apc.getNum()}}</th>
+      {% endfor %}
+    </tr>
+    <tr>
+      {% for apc in apcs %}
+      <td style="font-size: 7pt">{{apc.getShorttxt()}}</td>
+      {% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for sem in data.getSemestres(year=year)  %}
+    {% set lr=data.getRessourceObjects(semestre=sem,interparcours=parcours) %}
+    {% set ls=data.getSAEObjects(semestre=sem,interparcours=parcours) %}
+    {% for ll,lname in [(lr,'Ressources'),(ls,'SAÉ')] %}
+    {% if ll|length>0 %}
+    {% set co=comp.getCoeffs(type=lname,semestre=sem) %}
+    <tr>
+      <th>{{lname}}</th>
+      <td>
+        {% if co %}
+        {{co[1]}}
+        {% endif %}
+      </td>
+      <td colspan="{{apcs|length}}"></td>
+    </tr>
+    {% for m in ll %}
+    <tr>
+      <td>{{m.getId()}} {{m.getShorttxt()}}</td>
+      <td>
+        {% set co=comp.getCoeff(m) %}
+        {% if co %}
+        {{co[1]}}
+        {% endif %}
+      </td>
+      {% for apc in apcs: %}
+      <td>
+        {% if apc.getId() in m.getAPCList() %}X{% endif %}
+      </td>
+      {% endfor %}
+    </tr>
+    {% endfor %}
+    {% endif %}
+    {% endfor %}
+    {% endfor %}
+  </tbody>
+</table>

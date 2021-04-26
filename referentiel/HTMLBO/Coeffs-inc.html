@@ -1,0 +1,75 @@
+{% set year=utils.semestre2year(sem) %}
+<h1>{{data.getId()}} — Coefficients — S{{sem}} — Parcours {{parcours.getLettreList()|elegantjoin}}</h1>
+<p>{{parcours.getNameList()|elegantjoin}}</p>
+{% for subparc in data.getParcoursObjects(semestre=sem,interparcours=parcours) %}
+<h2>Éléments {{'communs aux' if subparc.isPlural()>1 else 'spécifiques du'}} parcours {{subparc.getLettreList()|elegantjoin}}</h2>
+{% set comps=data.getPossibleCompObjects([subparc],year) %}
+<table>
+  <thead>
+    <tr>
+      <th>
+        Ressource/SAÉ
+      </th>
+      {% for c in comps: %}
+      <th style="max-width:3cm">
+        C{{c.getNum()}} {{c.getShorttxt()}}
+      </th>
+      {% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+    {% set lr=data.getRessourceObjects(semestre=sem,parcours=subparc) %}
+    <tr>
+      <th>Ressources</th>
+      {% for c in comps: %}
+      <td>
+        {% set co=c.getCoeffs(ressources=True,semestre=sem) %}
+        {% if co %}
+        <strong>{{co[1]}}</strong>
+        {% endif %}
+      </td>
+      {% endfor %}
+    </tr>
+    {% for m in lr %}
+    <tr>
+      <td>
+        {{m.getId()}} {{m.getShorttxt()}}
+      </td>
+      {% for c in comps: %}
+      {% set co=c.getCoeff(m) %}
+      <td>
+        {% if co %}
+        {{co[1]}}
+        {% endif %}
+      </td>
+      {% endfor %}
+      {% endfor %}
+      {% set lr=data.getSAEObjects(semestre=sem,parcours=subparc) %}
+    <tr>
+      <th>SAÉ</th>
+      {% for c in comps: %}
+      <td>
+        {% set co=c.getCoeffs(sae=True,semestre=sem) %}
+        {% if co %}
+        <strong>{{co[1]}}</strong>
+        {% endif %}
+      </td>
+      {% endfor %}
+    </tr>
+    {% for m in lr %}
+    <tr>
+      <td>
+        {{m.getId()}} {{m.getShorttxt()}}
+      </td>
+      {% for c in comps: %}
+      {% set co=c.getCoeff(m) %}
+      <td>
+        {% if co %}
+        {{co[1]}}
+        {% endif %}
+      </td>
+      {% endfor %}
+      {% endfor %}
+  </tbody>
+</table>
+{% endfor %}

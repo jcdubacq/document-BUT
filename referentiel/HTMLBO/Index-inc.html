@@ -1,0 +1,102 @@
+{% set year=utils.semestre2year(sem) %}
+<h1>{{data.getId()}} — Horaires — S{{sem}} — Parcours {{parcours.getLettreList()|elegantjoin}}</h1>
+
+{% for subparc in data.getParcoursObjects(semestre=sem,interparcours=parcours) %}
+<h2>Éléments {{'communs aux' if subparc.isPlural()>1 else 'spécifiques du'}} parcours {{subparc.getLettreList()|elegantjoin}}</h2>
+<table>
+  <thead>
+    <tr>
+      <th rowspan="2">Code</th>
+      <th rowspan="2">Nom</th>
+      <th colspan="4">Heures</th>
+    </tr>
+    <tr>
+      <th>Total</th>
+      <th>CM/TD</th>
+      <th>TP</th>
+      <th>Projet</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% set lr=data.getRessourceObjects(semestre=sem,parcours=subparc) %}
+    {% set ls=data.getSAEObjects(semestre=sem,parcours=subparc) %}
+    {% for ll,lname,Lname in [(lr,'ressources','Ressources'),(ls,'SAÉ','SAÉ')] %}
+    {% if ll|length>0 %}
+    <tr>
+      <th colspan="6" class="centered">
+        {{Lname}}
+      </th>
+    </tr>
+    {% for ress in ll %}
+    {% set source=data.getHoursBlock(ress.getId()) %}
+    {% set resstot=source.sumIn(['TP','TD','PROJ'])-source.sumOut(['TP','TD','PROJ']) %}
+    {% set resstd=source.sumIn(['TD'])-source.sumOut(['TD']) %}
+    {% set resstp=source.sumIn(['TP'])-source.sumOut(['TP']) %}
+    {% set ressproj=source.sumIn(['PROJ'])-source.sumOut(['PROJ']) %}
+    <tr>
+      <td>{{ress.getId()}}</td>
+      <td>{{ress.getLongtxt()}}</td>
+      <td>{{resstot|hours}}</td>
+      <td>{{resstd|hours}}</td>
+      <td>{{resstp|hours}}</td>
+      <td>{{ressproj|hours}}</td>
+    </tr>
+    {% endfor %}
+    {% set resstot=data.sumIn(ll,['TP','TD','PROJ'])-data.sumOut(ll,['TP','TD','PROJ']) %}
+    {% set resstd=data.sumIn(ll,['TD'])-data.sumOut(ll,['TD']) %}
+    {% set resstp=data.sumIn(ll,['TP'])-data.sumOut(ll,['TP']) %}
+    {% set ressproj=data.sumIn(ll,['PROJ'])-data.sumOut(ll,['PROJ']) %}
+    {% set ressh=resstot+ressproj %}
+    <tr>
+      <td colspan="2"><strong>Total des {{lname}} du S{{sem}} parcours {{subparc.getLettreList()|elegantjoin}}</strong></td>
+      <td>{{resstot|hours}}</td>
+      <td>{{resstd|hours}}</td>
+      <td>{{resstp|hours}}</td>
+      <td>{{ressproj|hours}}</td>
+    </tr>
+    {% endif %}
+    {% endfor %}
+    {% set resstot=data.sumIn(ls+lr,['TP','TD','PROJ'])-data.sumOut(ls+lr,['TP','TD','PROJ']) %}
+    {% set resstd=data.sumIn(ls+lr,['TD'])-data.sumOut(ls+lr,['TD']) %}
+    {% set resstp=data.sumIn(ls+lr,['TP'])-data.sumOut(ls+lr,['TP']) %}
+    {% set ressproj=data.sumIn(ls+lr,['PROJ'])-data.sumOut(ls+lr,['PROJ']) %}
+    <tr style="border-top: double">
+      <td colspan="2"><strong>Total du S{{sem}} parcours {{subparc.getLettreList()|elegantjoin}}</strong></td>
+      <td>{{resstot|hours}}</td>
+      <td>{{resstd|hours}}</td>
+      <td>{{resstp|hours}}</td>
+      <td>{{ressproj|hours}}</td>
+    </tr>
+    {% if sem|int is even %}
+    {% set semint=sem|int %}
+    {% set othersem=(semint-1)|string %}
+    {% set lr=data.getRessourceObjects(semestre=othersem,parcours=subparc) %}
+    {% set ls=data.getSAEObjects(semestre=othersem,parcours=subparc) %}
+    {% set resstot=data.sumIn(ls+lr,['TP','TD','PROJ'])-data.sumOut(ls+lr,['TP','TD','PROJ']) %}
+    {% set resstd=data.sumIn(ls+lr,['TD'])-data.sumOut(ls+lr,['TD']) %}
+    {% set resstp=data.sumIn(ls+lr,['TP'])-data.sumOut(ls+lr,['TP']) %}
+    {% set ressproj=data.sumIn(ls+lr,['PROJ'])-data.sumOut(ls+lr,['PROJ']) %}
+    <tr>
+      <td colspan="2"><strong>Total du S{{othersem}} parcours {{subparc.getLettreList()|elegantjoin}}</strong> (rappel)</td>
+      <td>{{resstot|hours}}</td>
+      <td>{{resstd|hours}}</td>
+      <td>{{resstp|hours}}</td>
+      <td>{{ressproj|hours}}</td>
+    </tr>
+    {% set lr=data.getRessourceObjects(year=year,parcours=subparc) %}
+    {% set ls=data.getSAEObjects(year=year,parcours=subparc) %}
+    {% set resstot=data.sumIn(ls+lr,['TP','TD','PROJ'])-data.sumOut(ls+lr,['TP','TD','PROJ']) %}
+    {% set resstd=data.sumIn(ls+lr,['TD'])-data.sumOut(ls+lr,['TD']) %}
+    {% set resstp=data.sumIn(ls+lr,['TP'])-data.sumOut(ls+lr,['TP']) %}
+    {% set ressproj=data.sumIn(ls+lr,['PROJ'])-data.sumOut(ls+lr,['PROJ']) %}
+    <tr>
+      <td colspan="2"><strong>Total de l'année A{{year}} parcours {{subparc.getLettreList()|elegantjoin}}</strong></td>
+      <td>{{resstot|hours}}</td>
+      <td>{{resstd|hours}}</td>
+      <td>{{resstp|hours}}</td>
+      <td>{{ressproj|hours}}</td>
+    </tr>
+    {% endif %}
+  </tbody>
+</table>
+{% endfor %}

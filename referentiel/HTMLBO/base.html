@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>{% block title %}{% endblock %}</title>
+    <meta charset="UTF-8" />
+    <style>
+      br.pb {
+          page-break-before: always;
+      }
+      body {
+          font-family:"Arial";
+          font-size: 10pt;
+      }
+      table, th, td {
+          border: 1px solid black;
+      }
+      table {
+          width: 190mm;
+          border-collapse: collapse;
+      }
+      .centered {
+          text-align:center;
+      }
+    </style>
+  </head>
+  <body>
+    {% block content %} {% endblock %}
+  </body>
+</html>

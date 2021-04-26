@@ -1,0 +1,5 @@
+{% extends 'base.html' %}
+{% block title %}{{data.getId()}} — Matrice — A{{year}} — Parcours {{parcours.getLettreList()|elegantjoin}}{% endblock %}
+{% block content %}
+{% include 'Matrice-inc.html' %}
+{% endblock %}

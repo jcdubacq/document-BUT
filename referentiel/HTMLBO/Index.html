@@ -1,0 +1,5 @@
+{% extends 'base.html' %}
+{% block title %}{{data.getId()}} — Horaires — S{{sem}} — Parcours {{parcours.getLettreList()|elegantjoin}}{% endblock %}
+{% block content %}
+{% include 'Index-inc.html' %}
+{% endblock %}
