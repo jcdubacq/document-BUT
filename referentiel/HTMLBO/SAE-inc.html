@@ -1,0 +1,114 @@
+{% set comps=sae.getCompObjects() %}
+{% set compplural=utils.formatObjects('`isPlural`',sae.getCompObjects(),toFloat=True)|sum %}
+{% set apcplural=utils.formatObjects('`isPlural`',sae.getAPCObjects(),toFloat=True)|sum %}
+{% set source=data.getHoursBlock(sae.getId()) %}
+{% set resstot=source.sumIn(['TP','TD'])-source.sumOut(['TP','TD']) %}
+{% set resstp=source.sumIn(['TP'])-source.sumOut(['TP']) %}
+{% set ressproj=source.sumIn(['PROJ'])-source.sumOut(['PROJ']) %}
+{% set precos=sae.getPrecoList() %}
+{% set livrables=sae.getLivrableList() %}
+{% set semestres=sae.getSemestreList() %}
+{% set exemples=sae.getExempleObjects() %}
+{% set t=2 %}
+{% set dimens={'oneinmany':'95mm','allbutoneinmany':'95mm','all':'190mm'} %}
+<h1>{{data.getId()}} — SAÉ — {{sae.getId()}} {{sae.getShorttxt()}}</h1>
+<table>
+  <tbody>
+    <tr>
+      <th style="width:{{dimens['oneinmany']}}">Nom de la SAÉ </th>
+      <td style="width:{{dimens['oneinmany']}}">{{sae.getId()}} {{sae.getLongtxt()}}</td>
+    </tr>
+    <tr>
+      <th style="width:{{dimens['oneinmany']}}">Compétence{{'s' if compplural>1 else ''}} visée{{'s' if compplural>1 else ''}}</th>
+      <td>
+        {% for c in sae.getCompObjects() %}
+        {% if c.isPlural() > 1 %}{{c.getLongtxt()}}{% else %}Compétence {{c.getNum()}} : {{c.getLongtxt()}}{% endif %}{% if not loop.last %}{% if loop.index==loop.length %} et {% else %}, {% endif %}{% endif %}
+        {% endfor %}
+      </td>
+    </tr>
+    <tr>
+      <th>Description des objectifs de la SAÉ et de la problématique professionnelle associée</th>
+      <td>
+        {{sae.getDescriptionList()|join('<br/>')}}
+      </td>
+    </tr>
+    <tr>
+      <th>Apprentissage{{'s' if apcplural>1 else ''}} critique{{'s' if apcplural>1 else ''}} couvert{{'s' if apcplural>1 else ''}}</th>
+      <td>
+        {% for c in sae.getAPCObjects() %}
+        {% if c.isPlural() > 1 %}
+        {{c.getLongtxt()}}
+        {% else %}C{{c.getCompNum()}} APC{{c.getNum()}} : {{c.getLongtxt()}}
+        {% endif %}
+        {% if not loop.last %}<br/>{% endif %}
+        {% endfor %}
+      </td>
+    </tr>
+    <tr>
+      <th>Heures formation (dont TP)</th>
+      <td>
+        {{resstot|hours}} (dont {{resstp|hours}} de TP)
+      </td>
+    </tr>
+    <tr>
+      <th>Heures « projet tutoré »</th>
+      <td>
+        {{ressproj|hours}}
+        {% if precos|length>0 %}
+        (préconisation{{'s' if precos.__len__()>1 else ''}} : {{precos|elegantjoin}})
+        {% endif %}
+      </td>
+    </tr>
+    <tr>
+      <th>Liste des ressources mobilisées et combinées</th>
+      <td>
+        {% for ress in sae.getRessourceObjects() %}
+        {{ress.getId()}} {{ress.getLongtxt()}}
+        {% if not loop.last %}
+        <br/>
+        {% endif %}
+        {% else %}
+        —
+        {% endfor %}
+      </td>
+    </tr>
+    <tr>
+      <th>Types de livrable ou de production</th>
+      <td>
+        {% if livrables|length>0 %}
+        <ul>
+          {% for l in livrables %}
+          <li>{{l}}</li>
+          {% endfor %}
+        </ul>
+        {% endif %}
+      </td>
+    </tr>
+    <tr>
+      <th>Semestre{{'s' if semestres.__len__()>1 else ''}}</th>
+      <td>
+        {{semestres|elegantjoin}}
+      </td>
+    </tr>
+  </tbody>
+</table>
+{% if exemples|length>0 %}
+<p>Liste d'exemples de SAÉ :</p>
+<ul>
+{% for ex in exemples %}
+  <li><p>Exemple {{ex.getId()}} <strong>[{{ex.getTitre()}}]</strong> : {{ex.getSynopsis()|join('\n\n')}}
+{% if ex.getForm()|le|join|length > 0 %}
+(formats pédagogique possibles : {{ex.getForm()|elegantjoin}})
+{% endif %}
+</p>
+{% if ex.getProb()|le|join|length > 0 %}
+<p>— Problématique professionnelle : {{ex.getProb()|join}}</p>
+{% endif %}
+{% if ex.getEval()|le|join|length > 0 %}
+<p>— Préconisations d'évaluation : {{ex.getEval()|join}}</p>
+{% endif %}
+</li>
+{% endfor %}
+</ul>
+{% endif %}
+</pre>

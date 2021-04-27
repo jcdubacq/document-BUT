@@ -11,7 +11,7 @@
         Ressource/SAÉ
       </th>
       {% for c in comps: %}
-      <th style="max-width:3cm">
+      <th style="width:25mm;height:30mm;transform:rotate(90deg);">
         C{{c.getNum()}} {{c.getShorttxt()}}
       </th>
       {% endfor %}
@@ -22,7 +22,7 @@
     <tr>
       <th>Ressources</th>
       {% for c in comps: %}
-      <td>
+      <td class="centered">
         {% set co=c.getCoeffs(ressources=True,semestre=sem) %}
         {% if co %}
         <strong>{{co[1]}}</strong>
@@ -37,7 +37,7 @@
       </td>
       {% for c in comps: %}
       {% set co=c.getCoeff(m) %}
-      <td>
+      <td class="centered">
         {% if co %}
         {{co[1]}}
         {% endif %}
@@ -48,7 +48,7 @@
     <tr>
       <th>SAÉ</th>
       {% for c in comps: %}
-      <td>
+      <td class="centered">
         {% set co=c.getCoeffs(sae=True,semestre=sem) %}
         {% if co %}
         <strong>{{co[1]}}</strong>
@@ -63,7 +63,7 @@
       </td>
       {% for c in comps: %}
       {% set co=c.getCoeff(m) %}
-      <td>
+      <td class="centered">
         {% if co %}
         {{co[1]}}
         {% endif %}

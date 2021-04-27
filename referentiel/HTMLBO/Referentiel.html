@@ -45,6 +45,16 @@
   {% endfor %}
   {% endfor %}
 </ul>
+<h2>SAÉ</h2>
+<ul>
+  {% set ls=data.getSAEObjects() %}
+  {% for sae in ls %}
+  {% set mark=sae.getShortId() %}
+  {% set added=printer.addTemplate('SAE.html',mark,{'sae':sae}) %}
+  <li><a href="{{data.getShortId()|urlencode}}_SAE_{{mark|urlencode}}.html">SAÉ {{sae.getId()}}</a></li>
+  {% endfor %}
+</ul>
+
 
 {% for sem in data.getSemestres() %}
 {% for parcours in data.getParcoursObjects(semestre=sem,expanded=True) %}
@@ -63,6 +73,10 @@
 <br class="pb" />{% include 'Matrice-inc.html' %}
 {% endfor %}
 {% endfor %}
+{% endfor %}
+{% set ls=data.getSAEObjects() %}
+{% for sae in ls %}
+<br class="pb" />{% include 'SAE-inc.html' %}
 {% endfor %}
 
 

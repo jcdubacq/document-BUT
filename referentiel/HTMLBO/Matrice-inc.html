@@ -25,7 +25,7 @@
     {% set co=comp.getCoeffs(type=lname,semestre=sem) %}
     <tr>
       <th>{{lname}}</th>
-      <td>
+      <td class="centered">
         {% if co %}
         {{co[1]}}
         {% endif %}
@@ -35,14 +35,14 @@
     {% for m in ll %}
     <tr>
       <td>{{m.getId()}} {{m.getShorttxt()}}</td>
-      <td>
+      <td class="centered">
         {% set co=comp.getCoeff(m) %}
         {% if co %}
         {{co[1]}}
         {% endif %}
       </td>
       {% for apc in apcs: %}
-      <td>
+      <td class="centered">
         {% if apc.getId() in m.getAPCList() %}X{% endif %}
       </td>
       {% endfor %}
