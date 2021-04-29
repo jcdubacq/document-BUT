@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import sys,os,re
+import shutil
 import csv
 import subprocess
 import math
@@ -116,6 +117,19 @@ def year2semestre(a):
 
 def parcoursLettres(a):
     return Parcours.lettres(a)
+def copyAssets(inpath,out):
+    if not os.path.exists(inpath):
+        return 0
+    files = os.listdir(inpath)
+    c=0
+    for file in files:
+        ffile = os.path.join(inpath, file)
+        if os.path.isfile(ffile):
+            c+=1
+            shutil.copy(ffile, out)
+    return c
+
+
 utils={'parcoursLettres': parcoursLettres,'hours': hours2string,'formatObjects':formatObjects,'semestre2year':semestre2year}
 
 class Printer:
@@ -165,7 +179,13 @@ class Printer:
             print(done)
         self.epilogue()
     def prologue(self):
-        pass
+        outassets=os.path.join(self.outpath,'assets')
+        if not os.path.exists(outassets):
+            os.makedirs(outassets)
+        inassets=os.path.abspath(os.path.join('.','assets'))
+        copyAssets(inassets,outassets)
+        inassets=os.path.abspath(os.path.join(self.path,'assets'))
+        copyAssets(inassets,outassets)
     def epilogue(self):
         pass
 
