@@ -13,12 +13,12 @@
 %% for subparc in data.getParcoursObjects(semestre=sem,interparcours=parcours)
 \begin{center}
   Éléments \VAR{'communs aux' if subparc.isPlural()>1 else 'spécifiques du'} parcours \VAR{subparc.getLettreList()|elegantjoin|le}\par
-  \begin{tabular}{|l|p{100mm}|H|H|H|r|}\hline
+  \begin{tabular}{|l|p{100mm}|r|r|r|r|}\hline
     \textbf{Code} & \textbf{Nom} & \multicolumn{4}{c|}{\textbf{Heures}}  \\\cline{3-6}
     ~ & ~ & \multicolumn{1}{c|}{Total}& \multicolumn{1}{c|}{CM/TD} & \multicolumn{1}{c|}{TP}  & \multicolumn{1}{c|}{Projet}  \\\hline
     %% set lr=data.getRessourceObjects(semestre=sem,parcours=subparc)
     %% set ls=data.getSAEObjects(semestre=sem,parcours=subparc)
-    %% for ll,lname,Lname in [(lr,'ressources','Ressources'),(ls,'SAÉ','SAÉ')]
+    %% for ll,lname,Lname in [(ls,'SAÉ','SAÉ'),(lr,'ressources','Ressources')]
     %% if ll|length>0
     \multicolumn{6}{|c|}{\textbf{\VAR{Lname}}}\\\hline
     %% for ress in ll
@@ -27,14 +27,14 @@
     %% set resstd=source.sumIn(['TD'])-source.sumOut(['TD'])
     %% set resstp=source.sumIn(['TP'])-source.sumOut(['TP'])
     %% set ressproj=source.sumIn(['PROJ'])-source.sumOut(['PROJ'])
-    \hyperref[FICHE-\VAR{ress.getId()|le}]{\VAR{ress.getId()|le}} & \VAR{ress.getLongtxt()|le} & \VAR{resstot|hours} & \VAR{resstd|hours} & \VAR{resstp|hours} & \VAR{ressproj|hours}  \\\hline
+    \hyperref[FICHE-\VAR{ress.getId()|le}]{\VAR{ress.getId()|le}} & \VAR{ress.getLongtxt()|le} & \VAR{resstot|hoursnum} & \VAR{resstd|hoursnum} & \VAR{resstp|hoursnum} & \VAR{ressproj|hoursnum}  \\\hline
     %% endfor
     %% set resstot=data.sumIn(ll,['TP','TD','PROJ'])-data.sumOut(ll,['TP','TD','PROJ'])
     %% set resstd=data.sumIn(ll,['TD'])-data.sumOut(ll,['TD'])
     %% set resstp=data.sumIn(ll,['TP'])-data.sumOut(ll,['TP'])
     %% set ressproj=data.sumIn(ll,['PROJ'])-data.sumOut(ll,['PROJ'])
     %% set ressh=resstot+ressproj
-    \multicolumn{2}{|>\bfseries l|}{Total des \VAR{lname} du S\VAR{sem|le} parcours \VAR{subparc.getLettreList()|elegantjoin|le}} &\VAR{resstot|hours}&\VAR{resstp|hours}&\VAR{resstd|hours}&\VAR{ressproj|hours}\\\hline
+    \multicolumn{2}{|>\bfseries l|}{Total des \VAR{lname} du S\VAR{sem|le} parcours \VAR{subparc.getLettreList()|elegantjoin|le}} &\bfseries\VAR{resstot|hoursnum}&\bfseries\VAR{resstd|hoursnum}&\bfseries\VAR{resstp|hoursnum}&\bfseries\VAR{ressproj|hoursnum}\\\hline
     %% endif
     %% endfor
     %% set resstot=data.sumIn(ls+lr,['TP','TD','PROJ'])-data.sumOut(ls+lr,['TP','TD','PROJ'])
@@ -42,7 +42,7 @@
     %% set resstp=data.sumIn(ls+lr,['TP'])-data.sumOut(ls+lr,['TP'])
     %% set ressproj=data.sumIn(ls+lr,['PROJ'])-data.sumOut(ls+lr,['PROJ'])
     \hline
-    \multicolumn{2}{|>\bfseries l|}{Total du S\VAR{sem|le} parcours \VAR{subparc.getLettreList()|elegantjoin|le}}&\VAR{resstot|hours}&\VAR{resstd|hours}&\VAR{resstp|hours}&\VAR{ressproj|hours}\\\hline
+    \multicolumn{2}{|>\bfseries l|}{Total du S\VAR{sem|le} parcours \VAR{subparc.getLettreList()|elegantjoin|le}}&\bfseries\VAR{resstot|hoursnum}&\bfseries\VAR{resstd|hoursnum}&\bfseries\VAR{resstp|hoursnum}&\bfseries\VAR{ressproj|hoursnum}\\\hline
     %% if sem|int is even
     %% set semint=sem|int
     %% set othersem=(semint-1)|string
@@ -52,14 +52,14 @@
     %% set resstd=data.sumIn(ls+lr,['TD'])-data.sumOut(ls+lr,['TD'])
     %% set resstp=data.sumIn(ls+lr,['TP'])-data.sumOut(ls+lr,['TP'])
     %% set ressproj=data.sumIn(ls+lr,['PROJ'])-data.sumOut(ls+lr,['PROJ'])
-    \multicolumn{2}{|>\bfseries l|}{Total du S\VAR{othersem|le} parcours \VAR{subparc.getLettreList()|elegantjoin|le} (rappel)}&\VAR{resstot|hours}&\VAR{resstd|hours}&\VAR{resstp|hours}&\VAR{ressproj|hours}\\\hline
+    \multicolumn{2}{|>\bfseries l|}{Total du S\VAR{othersem|le} parcours \VAR{subparc.getLettreList()|elegantjoin|le} (rappel)}&\bfseries\VAR{resstot|hoursnum}&\bfseries\VAR{resstd|hoursnum}&\bfseries\VAR{resstp|hoursnum}&\bfseries\VAR{ressproj|hoursnum}\\\hline
     %% set lr=data.getRessourceObjects(year=year,parcours=subparc)
     %% set ls=data.getSAEObjects(year=year,parcours=subparc)
     %% set resstot=data.sumIn(ls+lr,['TP','TD','PROJ'])-data.sumOut(ls+lr,['TP','TD','PROJ'])
     %% set resstd=data.sumIn(ls+lr,['TD'])-data.sumOut(ls+lr,['TD'])
     %% set resstp=data.sumIn(ls+lr,['TP'])-data.sumOut(ls+lr,['TP'])
     %% set ressproj=data.sumIn(ls+lr,['PROJ'])-data.sumOut(ls+lr,['PROJ'])
-    \multicolumn{2}{|>\bfseries l|}{Total de l'année A\VAR{year|le} parcours \VAR{subparc.getLettreList()|elegantjoin|le}}&\VAR{resstot|hours}&\VAR{resstd|hours}&\VAR{resstp|hours}&\VAR{ressproj|hours}\\\hline
+    \multicolumn{2}{|>\bfseries l|}{Total de l'année A\VAR{year|le} parcours \VAR{subparc.getLettreList()|elegantjoin|le}}&\bfseries\VAR{resstot|hoursnum}&\bfseries\VAR{resstd|hoursnum}&\bfseries\VAR{resstp|hoursnum}&\bfseries\VAR{ressproj|hoursnum}\\\hline
 
     %% endif
   \end{tabular}

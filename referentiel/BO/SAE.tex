@@ -1,6 +1,6 @@
 % # context : data, utils, sae
 \newpage
-\section{ANNEXE C --- fiche SAÉ \VAR{sae.getId()|le} \emph{\VAR{sae.getShorttxt()|le}}}\label{FICHE-\VAR{sae.getId()|le}}
+\subsubsection*{ANNEXE C --- fiche SAÉ \VAR{sae.getId()|le} \emph{\VAR{sae.getShorttxt()|le}}}\label{FICHE-\VAR{sae.getId()|le}}
 %% set comps=sae.getCompObjects()
 %% set compplural=utils.formatObjects('`isPlural`',sae.getCompObjects(),toFloat=True)|sum
 %% set apcplural=utils.formatObjects('`isPlural`',sae.getAPCObjects(),toFloat=True)|sum
@@ -43,27 +43,27 @@
     Heures formation (dont TP) & \VAR{resstot|hours} (dont \VAR{resstp|hours} de TP)\\\hline
     Heures \og projet tutoré \fg (dont TP) & \VAR{ressproj|hours} %
     %% if precos|length>0
-    (préconisation\VAR{'s' if precos.__len__()>1 else ''}~: \VAR{precos|elegantjoin|le})
-    %% endif
+                                             (préconisation\VAR{'s' if precos.__len__()>1 else ''}~: \VAR{precos|elegantjoin|le})
+                                             %% endif
     \\\hline
     Liste des ressources mobilisées et combinées &
     %% for ress in sae.getRessourceObjects()
-    \hyperref[FICHE-\VAR{ress.getId()|le}]{\VAR{ress.getId()|le}~\VAR{ress.getLongtxt()|le}}
-    %% if not loop.last
-    \par
-    %% endif
-    %% else
-    ---
-    %% endfor
+                                                   \hyperref[FICHE-\VAR{ress.getId()|le}]{\VAR{ress.getId()|le}~\VAR{ress.getLongtxt()|le}}
+                                                   %% if not loop.last
+                                                   \par
+                                                   %% endif
+                                                   %% else
+                                                   ---
+                                                   %% endfor
     \\\hline
     Types de livrable ou de production &%
     %% if livrables|length>0
-    \begin{itemize}[nosep,topsep=0pt,label=\textbullet,leftmargin=1pc,labelsep=*]
-      %% for l in livrables
-    \item \VAR{l|le}
-      %% endfor
-    \end{itemize}%
-    %% endif
+                                         \begin{itemize}[nosep,topsep=0pt,label=\textbullet,leftmargin=1pc,labelsep=*]
+                                           %% for l in livrables
+                                         \item \VAR{l|le}
+                                           %% endfor
+                                         \end{itemize}%
+                                         %% endif
     \\\hline
     Semestre\VAR{'s' if semestres.__len__()>1 else ''} & \VAR{semestres|elegantjoin|le} \\\hline
   \end{tabular}
@@ -74,14 +74,18 @@ Liste d'exemples de SAÉ~:
 \begin{itemize}[nosep,topsep=0pt,label=\textbullet,leftmargin=1pc,labelsep=*]
   %% for ex in exemples
 \item Exemple~\VAR{ex.getId()|le} \textbf{[\VAR{ex.getTitre()|le}]}~: \VAR{ex.getSynopsis()|le|join('\n\n')}
+  %% if ex.getForm()|le|join|length > 6
+  [formats pédagogiques possibles : \VAR{ex.getForm()|elegantjoin|le}]
+  %% else
   %% if ex.getForm()|le|join|length > 0
-  (formats pédagogique possibles : \VAR{ex.getForm()|elegantjoin|le})
+  [format pédagogique possible : \VAR{ex.getForm()|elegantjoin|le}]
   %% endif
-\par
-  %%if ex.getProb()|le|join|length > 0
+  %% endif
+  \par
+  %% if ex.getProb()|le|join|length > 0
   ---~Problématique professionnelle~: \VAR{ex.getProb()|le|join}\par
   %% endif
-  %%if ex.getEval()|le|join|length > 0
+  %% if ex.getEval()|le|join|length > 0
   ---~Préconisations d'évaluation~: \VAR{ex.getEval()|le|join}\par
   %% endif
   %% endfor

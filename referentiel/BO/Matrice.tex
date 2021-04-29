@@ -29,10 +29,10 @@
     %% for sem in data.getSemestres(year=year) 
     %% set lr=data.getRessourceObjects(semestre=sem,interparcours=parcours)
     %% set ls=data.getSAEObjects(semestre=sem,interparcours=parcours)
-    %% for ll,lname in [(lr,'Ressources'),(ls,'SAÉ')]
+    %% for ll,lcode,lname in [(lr,'RESS','Ressources'),(ls,'SAE','SAÉ')]
     %% if ll|length>0
     % #    \multicolumn{\VAR{allcolumns}}{|c|}{\textbf{\VAR{lname}}}\\\hline
-    %% set co=comp.getCoeffs(type=lname,semestre=sem)
+    %% set co=comp.getCoeffs(onlyType=[lcode],semestre=sem)
     \textbf{\VAR{lname}} &
     %% if co
                            \VAR{co[1]|le}

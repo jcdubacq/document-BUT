@@ -98,6 +98,16 @@ def hours2string(a):
     elif minu>0:
         return '{0}h0{1}'.format(hour,minu)
     return str(hour)+'h'
+def hours2num(a):
+    if a==0:
+        return ''
+    hour=math.floor(a)
+    minu=math.floor(100*(a*60-hour*60))
+    if minu>9:
+        return '{0},{1}'.format(hour,minu)
+    elif minu>0:
+        return '{0},0{1}'.format(hour,minu)
+    return str(hour)
 
 def doublehour(a,b,double='{0} (dont {1} de TP)',simple='{0}'):
     if (b>0):
@@ -145,6 +155,7 @@ class Printer:
         self.jinja_env.filters['elegantjoin']=elegantjoin
         self.jinja_env.filters['le']=LaTeXEscape
         self.jinja_env.filters['hours']=hours2string
+        self.jinja_env.filters['hoursnum']=hours2num
         self.jinja_env.filters['merge']=merge
     def _specific(self):
         pass
@@ -200,7 +211,7 @@ class LaTeXPrinter(Printer):
 	    comment_start_string = '\#{',
 	    comment_end_string = '}',
 	    line_statement_prefix = '%%',
-	    line_comment_prefix = '%#',
+	    line_comment_prefix = '% #',
 	    trim_blocks = True,
 	    autoescape = False,
 	    loader = jinja2.FileSystemLoader(self.path)
@@ -339,10 +350,10 @@ class NormalComp(Comp):
         if moduleobj.getId() in self.coeffs:
             return self.coeffs[moduleobj.getId()]
         return None
-    def getCoeffs(self,ressources=False,sae=False,semestre=None,type=None):
-        if type=='Ressources':
+    def getCoeffs(self,ressources=False,sae=False,semestre=None,onlyType=None):
+        if 'RESS' in onlyType:
             ressources=True
-        elif type=='SAÉ':
+        if 'SAE' in onlyType:
             sae=True
         a=0
         b=[]
@@ -421,11 +432,12 @@ class TransversalAPC(APC):
 class Referentiel:
     def debug(self,a):
         print(str(a))
-    def __init__(self,name: str,shortname=None):
+    def __init__(self,name: str=None,shortname=None):
         self.name=name
         self.shortname=name
         if shortname != None:
             self.shortname=name
+        self.version=''
         self.COMP={}
         self.PARCOURS={}
         self.SAE={}
@@ -434,13 +446,20 @@ class Referentiel:
         self.HOURS={}
         self.COMP['TRANSVERSAL']=TransversalComp()
         self.APC['TRANSVERSAL']=TransversalAPC(self.COMP['TRANSVERSAL'])
+        self.introduction={}
+        self.introductionparcours={}
+        self.introductionparcoursref={}
         self.printer=[]
     def addTroncCommun(self,id: str):
         self.PARCOURS[id]=ParcoursCommun(id,self.PARCOURS)
     def getId(self):
         return self.name
     def getShortId(self):
-        return re.sub(r'[- ._]','',self.name)
+        return re.sub(r'[^a-zA-Z0-9]','',self.shortname)
+    def getVersion(self):
+        return self.version
+    def getNumber(self):
+        return self.number
     def getHoursBlock(self,k,fail=False):
         if k not in self.HOURS:
             if fail:
@@ -468,36 +487,6 @@ class Referentiel:
                 raise Exception('SAE {} not found'.format(k))
             self.SAE[k]=SAE(k)
         return self.SAE[k]
-    def getSAEObjects(self,semestre=None,year=None,parcours=None,interparcours=None):
-        if semestre==None and year==None:
-            return self.SAE.values()
-        sems=[]
-        if year!=None:
-            sems=year2semestre(year)
-        elif semestre!=None:
-            sems=[semestre]
-        resu=[]
-        for ress in self.SAE.values():
-            for sem in sems:
-                if sem in ress.getSemestreList():
-                    resu.append(ress)
-                    break
-        if parcours==None and interparcours==None:
-            return resu
-        resufinal=[]
-        if interparcours!=None:
-            for ress in resu:
-                plist=ress.getParcoursObjects()
-                for p in plist:
-                    if interparcours.intersects(p):
-                        resufinal.append(ress)
-                        break
-        else:
-            for ress in resu:
-                p=ress.getParcoursObjects()
-                if parcours in p:
-                    resufinal.append(ress)
-        return resufinal
     def getAPC(self,k,comp=None,fail=False):
         if k not in self.APC:
             if fail or comp==None:
@@ -514,67 +503,60 @@ class Referentiel:
                 raise Exception('Ressource {} not found'.format(k))
             self.RESS[k]=Ressource(k)
         return self.RESS[k]
-    def getRessourceObjects(self,semestre=None,year=None,parcours=None,interparcours=None):
-        if semestre==None and year==None:
-            return self.RESS.values()
-        sems=[]
-        if year!=None:
-            sems=year2semestre(year)
-        elif semestre!=None:
-            sems=[semestre]
-        resu=[]
-        for ress in self.RESS.values():
-            for sem in sems:
-                if sem in ress.getSemestreList():
-                    resu.append(ress)
-                    break
-        if parcours==None and interparcours==None:
-            return resu
-        resufinal=[]
-        if interparcours!=None:
-            for ress in resu:
-                plist=ress.getParcoursObjects()
-                for p in plist:
-                    if interparcours.intersects(p):
-                        resufinal.append(ress)
-                        break
+    def getModuleObjects(self,onlyType=None,semestre=None,year=None,parcours=None,interparcours=None):
+        r=set()
+        all=set(self.RESS.values())|set(self.SAE.values())
+        if onlyType==None:
+            r=all
         else:
-            for ress in resu:
-                p=ress.getParcoursObjects()
-                if parcours in p:
-                    resufinal.append(ress)
-        return resufinal
-    
+            for t in onlyType:
+                if t=='SAE':
+                    r=r.union(self.SAE.values())
+                if t=='RESS':
+                    r=r.union(self.RESS.values())
+        if year!=None or semestre!=None:
+            sems=[]
+            if year!=None:
+                sems=year2semestre(year)
+            elif semestre!=None:
+                sems=[semestre]
+            filtered=set()
+            for sem in sems:
+                filtered=filtered|{x for x in r if sem in x.getSemestreList()}
+            r=filtered
+        if parcours!=None or interparcours!=None:
+            parc=set()
+            if interparcours!=None:
+                parc={x for x in self.PARCOURS.values() if interparcours.intersects(x)}
+            if parcours!=None:
+                parc={parcours}
+            filtered=set()
+            for p in parc:
+                filtered=filtered|{x for x in r if p in x.getParcoursObjects()}
+            r=filtered
+        return list(sorted(r,key=lambda x:(("0" if x in self.SAE else "1")+x.getId())))
+    def getRessourceObjects(self,**args):
+        return self.getModuleObjects(onlyType=['RESS'],**args)
+    def getSAEObjects(self,**args):
+        return self.getModuleObjects(onlyType=['SAE'],**args)
     def getParcours(self,k,fail=False):
         if k not in self.PARCOURS:
             if fail:
                 raise Exception('Parcours {} not found'.format(k))
             self.PARCOURS[k]=Parcours(k)
         return self.PARCOURS[k]
-    def getParcoursObjects(self,semestre=None,year=None,expanded=False,parcours=None,interparcours=None):
-        r=self.getRessourceObjects(semestre=semestre,year=year,parcours=parcours,interparcours=interparcours)
-        s=self.getSAEObjects(semestre=semestre,year=year,parcours=parcours,interparcours=interparcours)
-        # TODO REPLACE WITH set()
-        parc={}
-        for rr in r:
-            for p in rr.getParcoursList():
-                parc[p]=1
-        for rr in s:
-            for p in rr.getParcoursList():
-                parc[p]=1
-        if not expanded:
-            return [self.PARCOURS[x] for x in parc]
-        if (len(parc)==1):
-            return [self.PARCOURS[x] for x in parc]
-        expandedresultat={}
-        for x in parc:
-            if isinstance(self.PARCOURS[x],ParcoursCommun):
-                for y in self.PARCOURS[x].others:
-                    expandedresultat[y.getId()]=1
-            else:
-                expandedresultat[x]=1    
-        return [self.PARCOURS[x] for x in expandedresultat]
-
+    def getParcoursObjects(self,semestre=None,year=None,forceNormal=False,parcours=None,interparcours=None):
+        sm=self.getModuleObjects(semestre=semestre,year=year,parcours=parcours,interparcours=interparcours)
+        parc=set()
+        for m in sm:
+            parc=parc|set(m.getParcoursObjects())
+        if forceNormal:
+            parcn=set([x for x in parc if x.isNormal()])
+            for p in [x for x in parc if not x.isNormal()]:
+                parcn=parcn|p.getExpandedSet()
+            parc=parcn
+        return sorted(list(parc),key=lambda x:((str(x.isPlural()+1) if x.isNormal() else '9')+x.getId()))
+            
     def updateObjects(self):
         for r in self.RESS.values():
             for a in r.getAPCList():
@@ -655,7 +637,20 @@ class Referentiel:
             module=self.RESS[moduleid]
         module.addCoeff(comp,value)
         comp.addCoeff(module,value)
+
+    def getIntroductionList(self):
+        a=[]
+        for x in sorted(self.introduction.keys()):
+            a.append(self.introduction[x])
+        return a
+    def getIntroductionParcours(self):
+        a=[]
+        for p in sorted(self.introduction.keys()):
+            b=[self.introductionparcours[p],self.PARCOURS[self.introductionparcoursref[p]]]
+            a.append(b)
+        return a
             
+
 class Source:
     def __init__(self,id):
         self.data={'in':{},'out':{}}
@@ -829,12 +824,11 @@ class Parcours(DataBlob):
                 t.sort()
         return(elegantjoin(t))
     def lettres(liste):
-        pris={}
+        pris=set()
         for p in liste:
-            for l in p.getLettreList():
-                pris[l]=1
-                t=list(pris.keys())
-                t.sort()
+            pris=pris.union(set(p.getLettreList()))
+        t=list(pris)
+        t.sort()
         return(t)
     def intersects(self,p):
         a=self.getLettreList()
@@ -845,6 +839,8 @@ class Parcours(DataBlob):
         return False
     def isNormal(self):
         return True
+    def getExpandedSet(self):
+        return set(self)
     def getLettreList(self):
         return self._getData('lettre')
     def getComps(self,year):
@@ -872,12 +868,13 @@ class ParcoursCommun(Parcours):
         for x in pdict:
             if pdict[x].isNormal():
                 self.others.append(pdict[x])
+    def getExpandedSet(self):
+        return set(self.others)
     def getComps(self,year):
         a=set()
         for x in self.others:
             a=a.union(set(x.getComps(year)))
         return list(a)
-
     def getLettreList(self):
         t={}
         for x in self.others:
@@ -944,6 +941,24 @@ class ReaderCSV:
         destination=row[3]
         self.REF.getHoursBlock(source).addHoursOut(nature,destination,value)
         self.REF.getHoursBlock(destination).addHoursIn(nature,source,value)
+    def readRowFromRef(self,row):
+        key=row[0]
+        value=row[1]
+        order=row[2]
+        if key=='name':
+            self.REF.name=value
+        if key=='shortname':
+            self.REF.shortname=value
+        if key=='version':
+            self.REF.version=value
+        if key=='number':
+            self.REF.number=value
+        if key=='introduction':
+            self.REF.introduction[order]=value
+        if key=='introductionparcours':
+            self.REF.introductionparcours[order]=value
+        if key=='introductionparcoursref':
+            self.REF.introductionparcoursref[order]=value
     def readDataFromFile(self,filename,funcname):
         with open(filename) as csvfile:
             data = csv.reader(csvfile,delimiter='\t',quotechar='"')
@@ -957,6 +972,7 @@ class ReaderCSV:
                     continue
                 func(row)
     def readData(self):
+        self.readDataFromFile('BUT/REF.tsv','readRowFromRef')
         self.readDataFromFile('BUT/COMP.tsv','readRowFromComp')
         self.readDataFromFile('BUT/SAE.tsv','readRowFromSAE')
         self.readDataFromFile('BUT/Horaires.tsv','readRowFromHoraires')
@@ -967,7 +983,7 @@ class ReaderCSV:
         self.REF.addTroncCommun('TRONCCOMMUN')
         self.REF.updateObjects()
 
-REF=Referentiel("Informatique")
+REF=Referentiel()
 ReaderCSV(REF).readData()
 
 jobs=sys.argv

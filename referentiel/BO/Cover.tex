@@ -1,0 +1,24 @@
+% # context: data, utils
+% # Creates cover page for official document
+
+\thispagestyle{empty}
+\begin{tikzpicture}[remember picture,overlay,x=1cm,y=1cm]
+  \node[inner sep=0pt,anchor=north west] (logo) at ($ (current page.north west)+(1.2929,-.9208) $) {\includegraphics[width=49.989mm]{assets/logo_ministere.png}};
+  \node[inner sep=0pt,anchor=north] (headerR) at ($ (current page.north west)+(16.843,-2.47) $) {\fontspec{Arial}\fontsize{10}{10}\bfseries\selectfont PN LP-BUT \VAR{data.getShortId()} 2021};
+  \draw[line width=0.5pt,black] ($ (current page.north west)+(1.7,-7.0115) $)--++(17,0);
+  \node[inner sep=0pt,anchor=north west] (miniA) at ($ (current page.north west)+(1.7,-7.1147) $) {\fontspec{Arial}\fontsize{8}{8}\mdseries\selectfont © Ministère de l'enseignement supérieur, de la recherche et de l'innovation, 2021};
+  \node[inner sep=0pt,anchor=north west] (miniA) at ($ (current page.north west)+(1.7,-7.4488) $) {\fontspec{Times New Roman}\fontsize{8}{8}\mdseries\selectfont \href{http://www.enseignementsup-recherche.gouv.fr}{\ul{http://www.enseignementsup-recherche.gouv.fr}}};
+  \node[inner sep=0pt,anchor=north] (annexe) at ($ .5*(current page.north west)+.5*(current page.north east)+(0,-9.9889) $) {\fontspec{Arial}\fontsize{24}{24}\mdseries\selectfont Annexe~\VAR{data.getNumber()}};
+  \node[inner sep=0pt,anchor=north] (licencepro) at ($ .5*(current page.north west)+.5*(current page.north east)+(0,-11.8473) $) {\fontspec{Arial}\bfseries\fontsize{24}{24}\selectfont Licence professionnelle};
+  \node[inner sep=0pt,anchor=north] (licencepro) at ($ .5*(current page.north west)+.5*(current page.north east)+(0,-12.8313) $) {\fontspec{Arial}\bfseries\fontsize{24}{24}\selectfont « Bachelor Universitaire de Technologie »};
+  \node[inner sep=0pt,anchor=north] (specialite) at ($ .5*(current page.north west)+.5*(current page.north east)+(0,-15.0928) $) {\fontspec{Arial}\bfseries\fontsize{24}{24}\selectfont \VAR{data.getId()|upper}};
+  \node[inner sep=0pt,anchor=north] (specialite) at ($ .5*(current page.north west)+.5*(current page.north east)+(0,-24.0390) $) {\fontspec{Arial}\mdseries\fontsize{24}{24}\selectfont Programme national};
+  \coordinate (last) at ($ (current page.north west)+(1.7475,-17.9616) $);
+  %% for p in data.getParcoursObjects(forceNormal=True)
+  \node[inner sep=0pt,anchor=north west] (parcours) at (last) {\fontspec{Arial}\mdseries\fontsize{16}{16}\selectfont Parcours};
+  \node[inner sep=0pt,anchor=base west,align=left,text width=143mm] (parcoursB) at ($ (parcours.base east)+(.2,0) $) {\fontspec{Arial}\mdseries\fontsize{16}{16}\selectfont \VAR{p.getNameList()|elegantjoin|le}\rule{0pt}{16pt}};
+  \coordinate (last) at ($ (parcours.west|-parcoursB.south)+(0,-0.4) $);
+  %% endfor
+\end{tikzpicture}%
+~
+\newpage

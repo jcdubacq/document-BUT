@@ -26,22 +26,22 @@
     %% endfor
     \\\hline
     %% set lr=data.getRessourceObjects(semestre=sem,parcours=subparc)
-    \textbf{Ressources}
+    %% set ls=data.getSAEObjects(semestre=sem,parcours=subparc)
+    %% for ll,lcode,Lname in [(ls,'SAE','SAÉ'),(lr,'RESS','Ressources')]
+    \textbf{\VAR{Lname}}
     &
     %% for c in comps:
-    %% set co=c.getCoeffs(ressources=True,semestre=sem)
+    %% set co=c.getCoeffs(onlyType=[lcode],semestre=sem)
     %% if co
       \textbf{\VAR{co[1]|le}}
       %% endif
       %% if not loop.last:
     &
-    %% else
-    \\\hline
     %% endif
     %% endfor
-
-    %% for m in lr
-    \VAR{m.getId()|le}~\VAR{m.getShorttxt()|le}
+    \\\hline
+    %% for m in ll
+    \VAR{m.getId()|le}~\VAR{m.getLongtxt()|le}
     &
     %% for c in comps:
     %% set co=c.getCoeff(m)
@@ -50,41 +50,23 @@
       %% endif
       %% if not loop.last:
     &
-    %% else
-    \\\hline
     %% endif
     %% endfor
+    \\\hline
     %% endfor
-    %% set lr=data.getSAEObjects(semestre=sem,parcours=subparc)
-    \textbf{SAÉ}
+    %% endfor
+    \textbf{Total}
     &
     %% for c in comps:
-    %% set co=c.getCoeffs(sae=True,semestre=sem)
+    %% set co=c.getCoeffs(onlyType=['RESS','SAE'],semestre=sem)
     %% if co
       \textbf{\VAR{co[1]|le}}
       %% endif
       %% if not loop.last:
     &
-    %% else
-    \\\hline
     %% endif
     %% endfor
-
-    %% for m in lr
-    \VAR{m.getId()|le}~\VAR{m.getShorttxt()|le}
-    &
-    %% for c in comps:
-    %% set co=c.getCoeff(m)
-    %% if co
-      \VAR{co[1]|le}
-      %% endif
-      %% if not loop.last:
-    &
-    %% else
     \\\hline
-    %% endif
-    %% endfor
-    %% endfor
   \end{tabular}
 \end{center}
 %% endfor
