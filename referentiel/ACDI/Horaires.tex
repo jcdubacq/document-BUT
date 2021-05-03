@@ -1,0 +1,219 @@
+% # context : data, utils, sem, parcours
+%% set year=utils.semestre2year(sem)
+\subsubsection{Horaires S\VAR{sem|le} — \VAR{parcours.getCanonical(lower=False)|le}}
+\selectparcours{\VAR{data.getParcoursCanonical(parcours)|le}}
+%% set subparcours=data.getParcoursObjects(semestre=sem,interparcours=parcours)
+%% for subparc in subparcours
+%% set parcstring=data.getParcoursCanonical(subparc)
+\begin{minipage}{\textwidth}
+  \begin{center}
+    \def\headertab#1{\multicolumn{1}{c|}{\rotatebox{90}{#1}}}
+    Éléments \VAR{'communs aux' if subparc.isPlural()>1 else 'spécifiques du'} parcours \VAR{subparc.getLettreList()|elegantjoin|le}\par
+    \begin{tabular}{lrrrrrrr}\hline
+      \toprule
+      \textbf{Nom}
+      & \textbf{Projet}
+      & \multicolumn{3}{c}{\parbox[c]{25mm}{\centering \textbf{Complément}}}
+      & \multicolumn{3}{r}{\parbox{25mm}{\centering\bfseries Heures de SAÉ}}
+      \\
+      \footnotesize\selectfont\emph{TD=groupe plein (peut inclure du CM), TP=demi-groupe}
+      &
+      & \multicolumn{3}{c}{\parbox[c]{25mm}{\centering \textbf{de formation}}}
+      &
+      \\
+      \cmidrule(r){1-1}
+      \cmidrule(rl){3-5}\cmidrule(l){6-8}
+      %% set lr=data.getRessourceObjects(semestre=sem,parcours=subparc)
+      %% set ls=data.getSAEObjects(semestre=sem,parcours=subparc)
+      %% set lp=data.getPortfolioObjects(semestre=sem,parcours=subparc)
+      %% for ll,lname,Lname in [(ls,'SAÉ','SAÉ'),(lp,'portfolios','Portfolio')]
+      % # (lr,'ressources','Ressources')
+      %% if ll|length>0
+      %% if not loop.first
+      \cmidrule(r){1-1}
+      %% endif
+      \multicolumn{1}{c}{\textbf{\VAR{Lname}}}
+      %% if loop.first
+      & & TD & TP & Total &  &  & Total
+      %% endif
+      \\
+      %% for ress in ll
+      %% set source=data.getHoursBlock(ress.getId())
+      %% set resstotin=source.sumIn(['TP','TD','PROJ'])
+      %% set resstdin=source.sumIn(['TD'])
+      %% set resstpin=source.sumIn(['TP'])
+      %% set ressprojin=source.sumIn(['PROJ'])
+      %% set resstotout=source.sumOut(['TP','TD','PROJ'])
+      %% set resstdout=source.sumOut(['TD'])
+      %% set resstpout=source.sumOut(['TP'])
+      %% set ressprojout=source.sumOut(['PROJ'])
+      %% set lonely='' if ll.__len__()>1 else '\\bfseries'
+      \hyperref[FICHE-\VAR{ress.getId()|le}]{\VAR{ress.getId()|le} \VAR{ress.getShorttxt()|le}}
+      &\VAR{lonely}\VAR{(ressprojin-ressprojout)|hoursnum}
+      &\VAR{lonely}\VAR{(resstdin-resstdout)|hoursnum}
+      &\VAR{lonely}\VAR{(resstpin-resstpout)|hoursnum}
+      &\VAR{lonely}\VAR{(resstdin-resstdout+resstpin-resstpout)|hoursnum}
+      &
+      &
+      &\VAR{lonely}\VAR{(resstotin)|hoursnum}
+      \\
+      %% endfor
+      %% if ll|length>1
+      %% set resstotin=data.sumIn(ll,['TP','TD','PROJ'])
+      %% set resstdin=data.sumIn(ll,['TD'])
+      %% set resstpin=data.sumIn(ll,['TP'])
+      %% set ressprojin=data.sumIn(ll,['PROJ'])
+      %% set resstotout=data.sumOut(ll,['TP','TD','PROJ'])
+      %% set resstdout=data.sumOut(ll,['TD'])
+      %% set resstpout=data.sumOut(ll,['TP'])
+      %% set ressprojout=data.sumOut(ll,['PROJ'])
+      %% set lonely='\\bfseries'
+      \textbf{Total des \VAR{lname} du S\VAR{sem|le} (\VAR{parcstring|le})}
+      &\VAR{lonely}\VAR{(ressprojin-ressprojout)|hoursnum}
+      &\VAR{lonely}\VAR{(resstdin-resstdout)|hoursnum}
+      &\VAR{lonely}\VAR{(resstpin-resstpout)|hoursnum}
+      &\VAR{lonely}\VAR{(resstdin-resstdout+resstpin-resstpout)|hoursnum}
+      &
+      &
+      &\VAR{lonely}\VAR{(resstotin)|hoursnum}
+      \\
+      %% endif
+      %% endif
+      %% endfor
+      %% set ll=ls+lp
+      %% set resstotin=data.sumIn(ll,['TP','TD','PROJ'])
+      %% set resstdin=data.sumIn(ll,['TD'])
+      %% set resstpin=data.sumIn(ll,['TP'])
+      %% set ressprojin=data.sumIn(ll,['PROJ'])
+      %% set resstotout=data.sumOut(ll,['TP','TD','PROJ'])
+      %% set resstdout=data.sumOut(ll,['TD'])
+      %% set resstpout=data.sumOut(ll,['TP'])
+      %% set ressprojout=data.sumOut(ll,['PROJ'])
+      %% set lonely='\\bfseries'
+      \cmidrule(r){1-1}
+      \textbf{Total du pôle SAÉ du S\VAR{sem|le} (\VAR{parcstring|le})}
+      &\VAR{lonely}\VAR{(ressprojin-ressprojout)|hoursnum}
+      &\VAR{lonely}\VAR{(resstdin-resstdout)|hoursnum}
+      &\VAR{lonely}\VAR{(resstpin-resstpout)|hoursnum}
+      &\VAR{lonely}\VAR{(resstdin-resstdout+resstpin-resstpout)|hoursnum}
+      &
+      &
+      &\VAR{lonely}\VAR{(resstotin)|hoursnum}
+      \\
+      \midrule
+      \textbf{Nom} & \textbf{Heures} & \multicolumn{3}{c}{\parbox[c]{25mm}{\centering \textbf{Participation}}} & \multicolumn{3}{r}{\parbox{25mm}{\centering\bfseries Heures de}}
+      \\
+      &  & \multicolumn{3}{c}{\parbox[c]{25mm}{\centering \textbf{aux SAÉ}}} & \multicolumn{3}{r}{\parbox{25mm}{\centering\bfseries ressources}}
+      \\
+      \cmidrule(rl){3-5}\cmidrule(l){6-8}
+      %% set ll=lr
+      %% set lname='ressources'
+      %% set Lname='Ressources'
+      %% if ll|length>0
+      \cmidrule(r){1-1}
+      \multicolumn{1}{c}{\textbf{\VAR{Lname}}}
+      %% if loop.first
+      & & TD & TP & Total & TD & TP & Total
+      %% endif
+      \\
+      %% for ress in ll
+      %% set source=data.getHoursBlock(ress.getId())
+      %% set resstotin=source.sumIn(['TP','TD','PROJ'])
+      %% set resstdin=source.sumIn(['TD'])
+      %% set resstpin=source.sumIn(['TP'])
+      %% set ressprojin=source.sumIn(['PROJ'])
+      %% set resstotout=source.sumOut(['TP','TD','PROJ'])
+      %% set resstdout=source.sumOut(['TD'])
+      %% set resstpout=source.sumOut(['TP'])
+      %% set ressprojout=source.sumOut(['PROJ'])
+      %% set lonely='' if ll.__len__()>1 else '\\bfseries'
+      \hyperref[FICHE-\VAR{ress.getId()|le}]{\VAR{ress.getId()|le} \VAR{ress.getShorttxt()|le}}
+      &\VAR{lonely}\VAR{(resstotin)|hoursnum}
+      &\VAR{lonely}\VAR{(resstdout)|hoursnum}
+      &\VAR{lonely}\VAR{(resstpout)|hoursnum}
+      &\VAR{lonely}\VAR{(resstdout+resstpout)|hoursnum}
+      &\VAR{lonely}\VAR{(resstdin-resstdout)|hoursnum}
+      &\VAR{lonely}\VAR{(resstpin-resstpout)|hoursnum}
+      &\VAR{lonely}\VAR{(resstotin-resstotout-ressprojin+ressprojout)|hoursnum}
+      \\
+      %% endfor
+      %% if ll|length>1
+      %% set resstotin=data.sumIn(ll,['TP','TD','PROJ'])
+      %% set resstdin=data.sumIn(ll,['TD'])
+      %% set resstpin=data.sumIn(ll,['TP'])
+      %% set ressprojin=data.sumIn(ll,['PROJ'])
+      %% set resstotout=data.sumOut(ll,['TP','TD','PROJ'])
+      %% set resstdout=data.sumOut(ll,['TD'])
+      %% set resstpout=data.sumOut(ll,['TP'])
+      %% set ressprojout=data.sumOut(ll,['PROJ'])
+      %% set lonely='\\bfseries'
+      \textbf{Total des \VAR{lname} du S\VAR{sem|le} (\VAR{parcstring|le})}
+      &\VAR{lonely}\VAR{(resstotin)|hoursnum}
+      &\VAR{lonely}\VAR{(resstdout)|hoursnum}
+      &\VAR{lonely}\VAR{(resstpout)|hoursnum}
+      &\VAR{lonely}\VAR{(resstdout+resstpout)|hoursnum}
+      &\VAR{lonely}\VAR{(resstdin-resstdout)|hoursnum}
+      &\VAR{lonely}\VAR{(resstpin-resstpout)|hoursnum}
+      &\VAR{lonely}\VAR{(resstotin-resstotout-ressprojin+ressprojout)|hoursnum}
+      \\
+      %% endif
+      %% endif
+      \bottomrule
+    \end{tabular}
+  \end{center}
+\end{minipage}
+%% endfor
+\bigskip
+
+
+%% set lr=data.getRessourceObjects(semestre=sem,interparcours=parcours)
+%% set ls=data.getSAEObjects(semestre=sem,interparcours=parcours)
+%% set lp=data.getPortfolioObjects(semestre=sem,interparcours=parcours)
+%% set ll=ls+lp+lr
+%% set parttd=data.sumOut(lr,['TD'])
+%% set parttp=data.sumOut(lr,['TP'])
+%% set resstotin=data.sumIn(ll,['TP','TD','PROJ'])
+%% set resstdin=data.sumIn(ll,['TD'])
+%% set resstpin=data.sumIn(ll,['TP'])
+%% set ressprojin=data.sumIn(ll,['PROJ'])
+%% set resstotout=data.sumOut(ll,['TP','TD','PROJ'])
+%% set resstdout=data.sumOut(ll,['TD'])
+%% set resstpout=data.sumOut(ll,['TP'])
+%% set ressprojout=data.sumOut(ll,['PROJ'])
+Les heures de formation dispensées au S\VAR{sem|le} (\VAR{data.getParcoursCanonical(parcours)|le}) sont de \VAR{(resstotin-resstotout)|hours} réparties en :
+\begin{itemize}
+\item \textbf{\VAR{(resstotin-resstotout+ressprojout-ressprojin)|hours}} d'enseignement et \textbf{\VAR{(ressprojin-ressprojout)|hours}} de travail encadré,
+\item \VAR{(resstotin-resstotout+ressprojout-ressprojin-parttp-parttd)|hours} consacrées au pôle ressources et \VAR{(ressprojin-ressprojout+parttp+parttd)|hours} consacrées au pôle SAÉ dont \VAR{(resstdout+resstpout)|hours} sous forme de formation complémentaire fournie par les ressources (elles-mêmes divisées en \VAR{resstdout|hours} de CM ou TD et \VAR{resstpout|hours} de TP),
+\item \VAR{(resstdin-resstdout)|hours} sous forme de CM ou de TD, \VAR{(resstpin-resstpout)|hours} sous forme de TP et \VAR{(ressprojin-ressprojout)|hours} comptées comme « projet tutoré ».
+\end{itemize}
+%% if sem|int is even
+%% set semint=sem|int
+%% set othersem=(semint-1)|string
+%% set lr=data.getRessourceObjects(semestre=othersem,interparcours=parcours)
+%% set ls=data.getSAEObjects(semestre=othersem,interparcours=parcours)
+%% set lp=data.getPortfolioObjects(semestre=othersem,interparcours=parcours)
+%% set ll=lr+ls+lp
+%% set oparttd=data.sumOut(lr,['TD'])
+%% set oparttp=data.sumOut(lr,['TP'])
+%% set oresstotin=data.sumIn(ll,['TP','TD','PROJ'])
+%% set oresstdin=data.sumIn(ll,['TD'])
+%% set oresstpin=data.sumIn(ll,['TP'])
+%% set oressprojin=data.sumIn(ll,['PROJ'])
+%% set oresstotout=data.sumOut(ll,['TP','TD','PROJ'])
+%% set oresstdout=data.sumOut(ll,['TD'])
+%% set oresstpout=data.sumOut(ll,['TP'])
+%% set oressprojout=data.sumOut(ll,['PROJ'])
+Pour rappel, les heures de formation dispensées au S\VAR{othersem|le} (\VAR{data.getParcoursCanonical(parcours)|le}) étaient de \VAR{(resstotin-resstotout)|hours} réparties en :
+\begin{itemize}
+\item \textbf{\VAR{(oresstotin-oresstotout+oressprojout-oressprojin)|hours}} d'enseignement et \textbf{\VAR{(oressprojin-oressprojout)|hours}} de travail encadré,
+\item \VAR{(oresstotin-oresstotout+oressprojout-oressprojin-oparttp-oparttd)|hours} consacrées au pôle oressources et \VAR{(oressprojin-oressprojout+oparttp+oparttd)|hours} consacrées au pôle SAÉ dont \VAR{(oresstdout+oresstpout)|hours} sous forme de formation complémentaire fournie par les ressources (elles-mêmes divisées en \VAR{oresstdout|hours} de CM ou TD et \VAR{oresstpout|hours} de TP),
+\item \VAR{(oresstdin-oresstdout)|hours} sous forme de CM ou de TD, \VAR{(oresstpin-oresstpout)|hours} sous forme de TP et \VAR{(oressprojin-oressprojout)|hours} comptées comme « projet tutoré ».
+\end{itemize}
+Ce qui donne sur l'année :
+\begin{itemize}
+\item \textbf{\VAR{(resstotin-resstotout+ressprojout-ressprojin+oresstotin-oresstotout+oressprojout-oressprojin)|hours}} d'enseignement et \textbf{\VAR{(ressprojin-ressprojout+oressprojin-oressprojout)|hours}} de travail encadré,
+\item \VAR{(oresstotin-oresstotout+oressprojout-oressprojin-oparttp-oparttd+resstotin-resstotout+ressprojout-ressprojin-parttp-parttd)|hours} consacrées au pôle oressources et \VAR{(oressprojin-oressprojout+oparttp+oparttd+ressprojin-ressprojout+parttp+parttd)|hours} consacrées au pôle SAÉ dont \VAR{(oresstdout+oresstpout+resstdout+resstpout)|hours} sous forme de formation complémentaire fournie par les ressources (elles-mêmes divisées en \VAR{(oresstdout+resstdout)|hours} de CM ou TD et \VAR{(oresstpout+resstpout)|hours} de TP),
+\item \VAR{(oresstdin-oresstdout+resstdin-resstdout)|hours} sous forme de CM ou de TD, \VAR{(oresstpin-oresstpout+resstpin-resstpout)|hours} sous forme de TP et \VAR{(oressprojin-oressprojout+ressprojin-ressprojout)|hours} comptées comme « projet tutoré ».
+\end{itemize}
+%% endif
+

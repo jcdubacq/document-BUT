@@ -1,0 +1,92 @@
+% # context : data, utils, sem, parcours
+%% set year=utils.semestre2year(sem)
+%% if sem|int is odd
+\newpage
+%% endif
+\subsubsection{Participation aux SAÉ du S\VAR{sem|le} — \VAR{parcours.getCanonical(lower=False)|le}}
+\selectparcours{\VAR{data.getParcoursCanonical(parcours)|le}}
+\begin{minipage}{\textwidth}
+  \begin{center}
+    \def\headertab#1{\multicolumn{2}{c|}{\rotatebox{90}{#1}}}
+    %% set lr=data.getRessourceObjects(semestre=sem,interparcours=parcours)
+    %% set ls=data.getSAEObjects(semestre=sem,interparcours=parcours)
+    %% set lp=data.getPortfolioObjects(semestre=sem,interparcours=parcours)
+    %% set comptabform='>{\columncolor{red}}r@{\hspace{2pt}}>{\itshape}r'*(ls+lp).__len__()
+    \bigskip
+    \begin{tabular}{l%
+        %% for col in ls+lp
+        cc%
+        %% endfor
+      }
+      \toprule
+      \parbox[b]{5cm}{
+        \begin{flushleft}
+          Ressources\\
+          Heures de TD+Heures de TP\\
+          X = participation sans formation complémentaire.
+        \end{flushleft}
+      }
+      %% for m in ls+lp
+      &
+      \multicolumn{2}{c}{\rotatebox{90}{\VAR{m.getId()+'~'+m.getShorttxt()|le}}}
+      %% endfor
+      \\
+      %% for m in ls+lp
+      \cmidrule(lr){\VAR{loop.index*2}-\VAR{loop.index*2+1}}
+      %% endfor
+      
+      %% for m in ls+lp
+      &
+      \multicolumn{1}{c}{\rotatebox{0}{TD}}
+      &
+      \multicolumn{1}{c}{\rotatebox{0}{TP}}
+      %% endfor
+      \\
+      \midrule
+      %% set colors=[0,0,4,0,0,4,4,4,8]
+      %% for m in lr
+      %% set colors=[0,0,4,0,0,4,0,0,4]
+      %% set colorindex=(loop.index % 3)
+      %% if colors[colorindex]>0
+      \rowcolor{black!\VAR{colors[colorindex]}!whitepagecolor}
+      %% endif
+      %% set colors=[0,0,0,0,0,0,0,0,0]
+      \VAR{m.getId()|le}~\VAR{m.getShorttxt()|le}
+      %% set source=data.getHoursBlock(m.getId())
+      %% set outerloop=loop
+      %% for mm in ls+lp
+      %% set innerloop=loop
+      %% set colorindex=(outerloop.index % 3)+3*(innerloop.index % 3)
+      &
+      %% set types=['TD','TP']
+      %% if source.listOut(destination=mm.getId())|length == 0
+      %% if types.pop()
+      %% endif
+      \multicolumn{2}{c}{
+        %% endif
+        %% for xt in types
+        %% if loop.index == 2
+        &
+        %% endif
+        %% if colors[colorindex]>0
+        \cellcolor{black!\VAR{colors[colorindex]}}
+        %% endif
+        %% if source.listOut(infotype=xt,destination=mm.getId())|length > 0
+        \VAR{source.sumOut(infotype=xt,destination=mm.getId())|hoursnum}
+        %% else
+        %% if m.getId() in mm.getRessourceList() and loop.length == 1
+        X
+        %% endif
+        %% endif
+        %% if loop.last and loop.index==1
+      }
+      %% endif
+      %% endfor
+      %% endfor
+      \\
+      %% endfor
+      \bottomrule
+    \end{tabular}
+  \end{center}
+\end{minipage}
+

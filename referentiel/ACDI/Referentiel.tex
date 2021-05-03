@@ -1,0 +1,310 @@
+\documentclass[10pt]{article}
+
+% All encoding stuff
+\usepackage[LUC,T2A,T1]{fontenc}%
+\usepackage[verbose]{newunicodechar}
+\usepackage{fontspec}
+\usepackage[T1]{fontenc}
+\usepackage{textcomp}
+
+% Drawing stuff
+\usepackage[usenames,dvipsnames]{xcolor}
+\usepackage[prefix=sol-]{xcolor-solarized}
+\usepackage{tikz}%
+\usetikzlibrary{tikzmark,calc,fit,shapes,shapes.misc,arrows,shadows.blur}%
+\usepackage{tcolorbox}
+\usepackage{graphicx}
+\usepackage{pdfpages}
+\pgfdeclarelayer{bg}    % declare background layer
+\pgfsetlayers{bg,main}
+
+%% include 'Color.tex'
+
+
+% Typography stuff
+\usepackage{geometry}
+\usepackage[headings]{fancyhdr}
+\usepackage{dcolumn,colortbl}
+\usepackage{soul} % better underline \ul
+\setuldepth{Berlin} % no descending to imitate word
+
+% Linking stuff
+
+\usepackage{hyperref,bookmark}
+\hypersetup{%
+  colorlinks,
+  urlcolor=blacktextemphcolor,
+  linkcolor=blacktextcolor
+}
+
+% Pure LaTeX stuff
+
+\usepackage{ifthen}
+\usepackage{tabularx,multirow,booktabs,ragged2e}
+\usepackage{colortbl}%
+\usepackage[french]{babel}
+\usepackage{enumitem,xspace}
+\newcommand\samebox[2]{%
+  \makebox[\widthof{#1}][r]{#2}%
+}
+\newcommand{\compareytozero}[3]{\path #1;\pgfgetlastxy{\xdelta}{\ydelta};\ifdim\ydelta<0pt#2\else#3\fi}
+
+\newcolumntype{H}{r}
+
+% Unused stuff
+% \usepackage[utf8x]{inputenc}%
+% \usepackage{etoolbox}
+% \usepackage[scale=.5,text=DOCUMENT~DE~TRAVAIL]{draftwatermark}
+
+% Typographic settings
+
+\makeatletter
+\newcommand\HUGE{\@setfontsize\Large{32pt}{40}}
+\renewcommand\Huge{\@setfontsize\Large{24pt}{30}}
+\renewcommand\LARGE{\@setfontsize\Large{16pt}{20}}
+\renewcommand\Large{\@setfontsize\Large{13pt}{16}}
+\renewcommand\large{\@setfontsize\Large{11pt}{13}}
+\renewcommand\normalsize{\@setfontsize\Large{10pt}{12}}
+\renewcommand\small{\@setfontsize\Large{9pt}{11}}
+\renewcommand\footnotesize{\@setfontsize\Large{8pt}{9}}
+\makeatother
+
+\geometry{a4paper,left=10mm,right=10mm,top=25 mm,bottom=25mm}
+\setmainfont{Arial}
+\makeatletter
+\newunicodechar{«}{\fontspec{Arial}\char"00AB\FB@guillspace\ignorespaces}
+\newunicodechar{»}{\unskip\FB@guillspace\fontspec{Arial}\char"00BB}
+\newunicodechar{©}{\fontspec{Arial}\char"00A9\unskip\,}
+\makeatother
+\setlength{\parindent}{0pt}
+\setlength{\tabcolsep}{2mm}\setlength{\arrayrulewidth}{.2mm}
+
+\pagestyle{headings}
+\renewcommand{\sectionmark}[1]{%
+  \gdef\currsection{#1}%
+}
+\renewcommand{\subsectionmark}[1]{%
+  \markright{\currsection\ \textbullet\ #1}%
+}
+\def\fancy{%
+  \fancyhf{}%
+  \fancyhead[L]{\small\emph{\rightmark}}%
+  \fancyhead[R]{\thepage}%
+  \fancyfoot[L]{\textcolor{blacktextdimmedcolor}{©~Assemblée des cheffes et chefs de département \VAR{data.getId()|le}}\\%
+    \href{\VAR{data.url|le}}{\ul{\VAR{data.url|le}}}}%
+  \fancyfoot[R]{\textcolor{blacktextdimmedcolor}{\VAR{data.getVersion()|le}\\\VAR{data.getId()|le} (\leparcours)}}%
+}
+\fancy
+
+\renewcommand{\headrulewidth}{0pt}
+
+\newcommand{\selectallparcours}{\def\leparcours{\VAR{data.getParcoursCanonical(data.getParcoursObjects())|le}}}
+\newcommand{\selectparcours}[1]{\gdef\leparcours{#1}}
+\selectallparcours
+
+% Only three sizes of titles (including normalsize)
+\usepackage{titlesec}
+\renewcommand\thesection{\Alph{section}}
+\renewcommand\thesubsection{\arabic{subsection}}
+\renewcommand\thesubsubsection{\arabic{subsubsection}}
+\newcommand\invisiblesubsubsection[1]{\refstepcounter{subsubsection}  \addcontentsline{toc}{subsubsection}{\protect\numberline{\thesubsubsection}#1} \subsubsectionmark{#1}}
+
+\titleformat{\section}{\normalfont\LARGE\bfseries\color{blacktextemphcolor}}%
+{\tcbox[colback=blackpagecolor, colframe=blackpagecolor, coltext=whitetextdimmedcolor, on line, boxsep=0pt, left=4pt, right=4pt, top=4pt, bottom=4pt]{\textcolor{whitetextcolor}{\thesection}}}{0.4em}{}
+\titleformat{\subsection}{\normalfont\Large\bfseries\color{blacktextemphcolor}}%
+{\tcbox[colback=blackpagecolor, colframe=blackpagecolor, coltext=whitetextdimmedcolor, on line, boxsep=0pt, left=4pt, right=4pt, top=4pt, bottom=4pt]{\thesection.\textcolor{whitetextcolor}{\thesubsection}}}{0.4em}{}
+\titleformat{\subsubsection}{\normalfont\large\bfseries\color{blacktextemphcolor}}%
+{\tcbox[colback=blackpagecolor, colframe=blackpagecolor, coltext=whitetextdimmedcolor, on line, boxsep=0pt, left=4pt, right=4pt, top=4pt, bottom=4pt]{\thesection.\thesubsection.{\normalsize\selectfont\textcolor{whitetextcolor}{\thesubsubsection}}}}{0.4em}{}
+
+\newcommand{\textitemize}{–\xspace}
+\newcommand{\textitemizesecondary}{\textbullet\xspace}
+
+\begin{document}
+%% include 'Cover.tex'
+\newpage
+\section[Présentation générale]{Présentation générale de la spécialité et des parcours}
+Ce document présente le programme national du B.U.T \VAR{data.getId()|le}
+et complète l’annexe 1 de l’arrêté relatif aux programmes nationaux de
+la licence professionnelle-bachelor universitaire de technologie.
+
+
+%% for paragraph in data.getIntroductionList()
+\VAR{paragraph|le}
+
+%% endfor
+%% for tab in data.getIntroductionParcours()
+%% set parc=tab[1]
+\subsection*{\VAR{parc.getCanonical(lower=False)|le} «~\VAR{parc.getNameList()|elegantjoin|le}~»}
+\VAR{tab[0]|le}
+%% endfor
+
+\selectallparcours
+\section{Référentiel de formation}
+\subsection{Tableaux croisant les compétences, les SAÉ et les ressources}
+\selectallparcours
+
+%% for sem in data.getSemestres()
+%% for parcours in data.getParcoursObjects(semestre=sem) 
+%% include Horaires.tex'
+%% endfor
+%% endfor
+%% for sem in data.getSemestres()
+%% for parcours in data.getParcoursObjects(semestre=sem) 
+%% include 'Flechage.tex'
+%% endfor
+%% endfor
+%% for sem in data.getSemestres()
+%% for parcours in data.getParcoursObjects(semestre=sem) 
+%% include 'Coeffs.tex'
+%% endfor
+%% endfor
+%% for year in data.getYears()
+%% for parcours in data.getParcoursObjects(year=year)
+%% include 'Matrice.tex'
+%% endfor
+%% endfor
+
+\newpage
+\subsection{Cadre général}
+\subsubsection*{Les situations d’apprentissage et d’évaluation}
+Les SAÉ permettent l’évaluation en situation de la compétence. Cette
+évaluation est menée en correspondance avec l’ensemble des éléments
+structurants le référentiel, et s’appuie sur la démarche portfolio, à
+savoir une démarche de réflexion et de démonstration portée par la
+personne elle-même.  Parce que cette démarche répond à une problématique
+que l’on retrouve en milieu professionnel, une SAÉ est une tâche
+authentique.
+
+En tant qu’ensemble d’actions, la SAÉ nécessite de la part de la
+personne qui la met en œuvre le choix, la mobilisation et la combinaison
+de ressources pertinentes et cohérentes avec les objectifs ciblés.
+
+L’enjeu d’une SAÉ est ainsi multiple :
+\begin{itemize}
+\item Participer au développement de la compétence ;
+\item Soutenir l’apprentissage et la maîtrise des ressources ;
+\item Intégrer l’autoévaluation ;
+\item Permettre une individualisation des apprentissages.
+\end{itemize}
+
+Au cours des différents semestres de formation, la confrontation à
+plusieurs SAÉ qui permettront de développer et de mettre en œuvre
+chaque niveau de compétence ciblé dans le respect des composantes
+essentielles du référentiel de compétences et en cohérence avec les
+apprentissages critiques.
+
+%% set services=["carrières juridiques", "carrières sociales", "gestion administrative et commerciale des organisations", "gestion des entreprises et administrations", "gestion logistique et transport", "information-communication", "statistique et informatique décisionnelle", "techniques de commercialisation"]
+Les SAÉ peuvent mobiliser des heures issues des
+%% if data.getId()|lower in services
+1800
+%% else
+2000
+%% endif
+h de formation et des 600 h de projet. Les SAÉ prennent la forme de
+dispositifs pédagogiques variés, individuels ou collectifs, organisés
+dans un cadre universitaire ou extérieur, tels que des ateliers, des
+études, des challenges, des séminaires, des immersions au sein d’un
+environnement professionnel, des stages, etc.
+
+\subsubsection*{La démarche portfolio}%
+%% for portfolio in data.getPortfolioObjects()
+\label{FICHE-\VAR{portfolio.getId()|le}}%
+%% endfor
+
+Nommé parfois portefeuille de compétences ou passeport professionnel, le
+portfolio est un point de connexion entre le monde universitaire et le
+monde socio-économique. En cela, il répond à l’ensemble des dimensions
+de la professionnalisation de l’étudiant : de sa formation à son devenir
+en tant que professionnel.
+
+Le portfolio soutient donc le développement des compétences et
+l’individualisation du parcours de formation.  Plus spécifiquement, le
+portfolio offre la possibilité pour l’étudiant d’engager une démarche de
+démonstration, de progression, d’évaluation et de valorisation des
+compétences qu’il acquiert tout au long de son cursus.
+
+Quels qu’en soient la forme, l’outil ou le support, le portfolio a pour
+objectif de permettre à l’étudiant d’adopter une posture réflexive et
+critique vis-à-vis des compétences acquises ou en voie d’acquisition. Au
+sein du portfolio, l’étudiant documente et argumente sa trajectoire de
+développement en mobilisant et analysant des traces, et ainsi en
+apportant des preuves issues de l’ensemble de ses mises en situation
+professionnelle (SAÉ).
+
+La démarche portfolio est un processus continu d’autoévaluation qui
+nécessite un accompagnement par l’ensemble des acteurs de l’équipe
+pédagogique. L’étudiant est guidé pour comprendre les éléments du
+référentiel de compétences, ses modalités d’appropriation, les mises en
+situation correspondantes et les critères d’évaluation.
+
+\subsubsection*{Le projet personnel et professionnel}
+Présent à chaque semestre de la formation et en lien avec les réflexions
+de l’équipe pédagogique, le projet personnel et professionnel est un
+élément structurant qui permet à l’étudiant d’être l’acteur de sa
+formation, d’en comprendre et de s’en approprier les contenus, les
+objectifs et les compétences ciblées. Il assure également un
+accompagnement de l’étudiant dans sa propre définition d’une stratégie
+personnelle et dans la construction de son identité professionnelle, en
+cohérence avec les métiers et les situations professionnelles couverts
+par la spécialité « \VAR{data.getId()|le} » et les parcours associés. Enfin, le PPP prépare
+l’étudiant à évoluer tout au long de sa vie professionnelle, en lui
+fournissant des méthodes d’analyse et d’adaptation aux évolutions de la
+société, des métiers et des compétences.  Par sa dimension personnelle,
+le PPP vise à :
+\begin{itemize}
+\item Induire chez l’étudiant un questionnement sur
+  son projet et son parcours de formation ;
+\item Lui donner les moyens d’intégrer les codes du
+  monde professionnel et socio-économique ;
+\item L’aider à se définir et à se positionner ;
+\item Le guider dans son évolution et son devenir ;
+\item Développer sa capacité d’adaptation.
+\end{itemize}
+Au plan professionnel, le PPP permet :
+\begin{itemize}
+\item Une meilleure appréhension des objectifs de la formation, du
+  référentiel de compétences et du référentiel de formation ;
+\item Une connaissance exhaustive des métiers et perspectives
+  professionnelles spécifiques à la spécialité et ses parcours ;
+\item L’usage contextualisé des méthodes et des outils en lien avec la
+  démarche de recrutement, notamment dans le cadre d’une recherche de
+  contrat d’alternance ou de stage ;
+\item La construction d’une identité professionnelle au travers des
+  expériences de mise en situation professionnelle vécues pendant la
+  formation.
+\end{itemize}
+Parce qu’ils participent tous deux à la professionnalisation de
+l’étudiant et en cela sont en dialogue, le PPP et la démarche portfolio
+ne doivent pourtant pas être confondus. Le PPP répond davantage à un
+objectif d’accompagnement qui dépasse le seul cadre des compétences à
+acquérir, alors que la démarche portfolio répond fondamentalement à des
+enjeux d’évaluation des compétences.
+\subsection{Fiches SAÉ et ressources classées par semestre}
+%% for sem in data.getSemestres()
+%% set ls=data.getSAEObjects(semestre=sem)
+%% set lr=data.getRessourceObjects(semestre=sem)
+%% for ll,lname in [(ls,'SAÉ'),(lr,'Ressources')]
+\textbf{Semestre \VAR{sem|le}, \VAR{lname}}\\
+%% for l in ll
+\makebox[\linewidth]{\quad \hyperref[FICHE-\VAR{l.getId()|le}]{\VAR{l.getId()|le}~\VAR{l.getLongtxt()|le}}\dotfill\pageref{FICHE-\VAR{l.getId()|le}}}\par
+%% endfor
+%% endfor
+%% endfor
+%% for sem in data.getSemestres()
+%% set ls=data.getSAEObjects(semestre=sem)
+%% set lr=data.getRessourceObjects(semestre=sem)
+%% for sae in ls
+%% include 'SAE.tex'
+%% endfor
+%% for ress in lr
+%% include 'Ressource.tex'
+%% endfor
+%% endfor
+\section{Dispositions particulières}
+Non-applicable.
+\section{Référentiel d’évaluation}
+Les dispositions relatives à l’évaluation sont décrites dans l’annexe 1
+de l’arrêté relatif aux programmes nationaux de la licence
+professionnelle-bachelor universitaire de technologie.
+\end{document}
+

@@ -1,0 +1,27 @@
+% # context : data, module, year, possiblecomps, complettres
+% 
+% Fresco
+% 
+\coordinate(frescostart) at ($ (start-|NWi)+(31,11) $);
+\coordinate(frescoend) at ($ (frescostart-|NEi)+(-1,0) $);
+\coordinate(frescovect) at ($ (frescoend)-(frescostart) $);
+\coordinate(frescolast) at (frescostart);
+%% set compnum=possiblecomps|length
+%% set comppart=1/compnum|float
+%% for comp in possiblecomps
+%% set compnum=comp.getNum()|int
+%% set compltr=complettres[compnum]
+%% set possibleacs=comp.getACObjects(year=year)
+%% set acs=module.getACObjects(comp=comp)
+%% set acsn=acs|length
+%% set acsnb=possibleacs|length
+%% set acspart=comppart*(1/acsnb)|float
+\coordinate (fresconew) at ($ \VAR{comppart}*(frescovect)+(frescolast) $);
+\draw[line cap=butt,line width=1mm,draw=comp\VAR{compltr}color\VAR{'!20!whitepagecolor' if acs|length==0 else ''}] (frescolast)--(fresconew);
+%% for ac in acs
+%% set acnum=ac.getNum()|int
+%% set acstart=acspart*(acnum-1)
+\draw[line cap=butt,line width=2mm,draw=comp\VAR{compltr}color] ($ (frescolast)+(0,2)+\VAR{acstart}*(frescovect) $)--++($ \VAR{acspart}*(frescovect) $);
+%% endfor
+\coordinate (frescolast) at (fresconew);
+%% endfor

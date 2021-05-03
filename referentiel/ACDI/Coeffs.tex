@@ -1,0 +1,79 @@
+% # context : data, utils, sem, parcours
+%% set year=utils.semestre2year(sem)
+\newpage
+\subsubsection{Coefficients S\VAR{sem|le} — Parcours \VAR{parcours.getLettreList()|elegantjoin|le}}
+\selectparcours{\VAR{data.getParcoursCanonical(parcours)|le}}
+%% for subparc in data.getParcoursObjects(semestre=sem,interparcours=parcours)
+\begin{center}
+  %% set comps=data.getPossibleCompObjects([subparc],year)
+  %% set comptabform='c'*comps.__len__()
+  %% set allcolumns=comps.__len__()+1
+  \begin{tabular}{l\VAR{comptabform}}
+    \toprule
+    Ressource/SAÉ
+    & 
+    %% for c in comps:
+    \rotatebox{90}{C\VAR{c.getNum()|le}~\VAR{c.getShorttxt()|le}}
+    %% if not loop.last
+    &
+    %% endif
+    %% endfor
+    \\\midrule
+    %% set lr=data.getRessourceObjects(semestre=sem,parcours=subparc)
+    %% set ls=data.getSAEObjects(semestre=sem,parcours=subparc)
+    %% set lp=data.getPortfolioObjects(semestre=sem,parcours=subparc)
+    %% for ll,lcode,Lname in [(ls,'SAE','SAÉ'),(lp,'PORTFOLIO','Portfolio'),(lr,'RESS','Ressources')]
+    \addlinespace{}%
+    \textbf{\VAR{Lname}}
+    &
+    %% set sumco=utils.sumCoeffs(comps,onlyType=[lcode],semestre=sem)
+    %% if sumco > 0
+    %% for c in comps:
+    %% set co=c.getCoeffs(onlyType=[lcode],semestre=sem)
+    %% if co
+    \textbf{\VAR{co[1]|le}}
+    %% endif
+    %% if not loop.last:
+    &
+    %% endif
+    %% endfor
+    %% else
+    \multicolumn{\VAR{allcolumns-1}}{c}{\rule{0ex}{2ex}Non évalué ce semestre}
+    %% endif
+    \\
+    %% for m in ll
+    \hyperref[FICHE-\VAR{m.getId()|le}]{\VAR{m.getId()|le} \VAR{m.getLongtxt()|le}}
+    &
+    %% set sumco=utils.sumCoeffs(comps,module=m)
+    %% if sumco > 0
+    %% for c in comps:
+    %% set co=c.getCoeff(m)
+    %% if co
+    \VAR{co[1]|le}
+    %% endif
+    %% if not loop.last:
+    &
+    %% endif
+    %% endfor
+    %% else
+    \multicolumn{\VAR{allcolumns-1}}{c}{\rule{0ex}{2ex}—}
+    %% endif
+    \\
+    %% endfor
+    %% endfor
+    \addlinespace\textbf{Total}
+    &
+    %% for c in comps:
+    %% set co=c.getCoeffs(onlyType=['RESS','SAE','PORTFOLIO'],semestre=sem)
+    %% if co
+    \textbf{\VAR{co[1]|le}}
+    %% endif
+    %% if not loop.last:
+    &
+    %% endif
+    %% endfor
+    \\
+    \bottomrule
+  \end{tabular}
+\end{center}
+%% endfor

@@ -1,0 +1,69 @@
+% # context : data, utils, year, parcours
+%% set comps=data.getPossibleCompObjects(data.getParcoursObjects(year=year,interparcours=parcours),year)
+%% for comp in comps
+%% set acs=comp.getACObjects(year=year)
+%% set allcolumns=acs.__len__()+2
+\newpage
+\subsubsection{Matrice des apprentissages critiques A\VAR{year|le} — C\VAR{comp.getNum()|le} — \VAR{parcours.getCanonical()|le}}
+\selectparcours{\VAR{data.getParcoursCanonical(parcours)|le}}
+\begin{center}
+  \begin{tabular}{l>{\bfseries}c\BLOCK{for ac in comp.getACObjects(year=year)}c\BLOCK{endfor}}
+    \toprule
+    &
+    \rotatebox[origin=l]{90}{\parbox{25mm}{Coeff.}}
+    &      
+    %% for ac in acs
+    \rotatebox[origin=l]{90}{\parbox{25mm}{\raggedright\arraybackslash \textbf{AC \VAR{ac.getNum()|le}}\par\raggedright\arraybackslash\scriptsize\selectfont \VAR{ac.getShorttxt()|le}}}
+    %% if not loop.last
+    &
+    %% endif
+    %% endfor
+    \\
+    \cmidrule(lr){2-2}\cmidrule(lr){3-\VAR{allcolumns}}
+    %% for sem in data.getSemestres(year=year)
+    %% set semloop=loop
+    %% set lr=data.getRessourceObjects(semestre=sem,interparcours=parcours)
+    %% set ls=data.getSAEObjects(semestre=sem,interparcours=parcours)
+    %% for ll,lcode,lname in [(lr,'RESS','Ressources'),(ls,'SAE','SAÉ')]
+    %% if ll|length>0
+    % #    \multicolumn{\VAR{allcolumns}}{|c|}{\textbf{\VAR{lname}}}\\
+    %% set co=comp.getCoeffs(onlyType=[lcode],semestre=sem)
+    %% if not (loop.first and semloop.first)
+    \addlinespace%
+    %% endif
+    \textbf{\VAR{lname}} &
+    %% if co
+    \VAR{co[1]|le}
+    %% endif
+    &
+    %% for ac in acs
+    %% if not loop.last
+    \multicolumn{1}{c}{}&
+    %% endif
+    %% endfor
+    \\
+    %% for m in ll
+    \VAR{m.getId()|le}~\VAR{m.getShorttxt()|le}
+    &
+    %% set co=comp.getCoeff(m)
+    %% if co
+    \VAR{co[1]|le}
+    %% endif
+    &
+    %% for ac in acs:
+    %% if ac.getId() in m.getACList()
+    \multicolumn{1}{c}{\cellcolor{blackpagecolor}X}
+    %% endif
+    %% if not loop.last:
+    &
+    %% endif
+    %% endfor
+    \\
+    %% endfor
+    %% endif
+    %% endfor
+    %% endfor
+    \bottomrule
+  \end{tabular}
+\end{center}
+%% endfor
