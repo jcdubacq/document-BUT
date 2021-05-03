@@ -1,16 +1,17 @@
 % # context : data, utils, ress
 \newpage
-\subsubsection{ANNEXE D --- fiche Ressource \VAR{ress.getId()|le}~\emph{\VAR{ress.getShorttxt()|le}}}\label{FICHE-\VAR{ress.getId()|le}}
+\subsubsection{ANNEXE D — fiche Ressource \VAR{ress.getId()|le}~\emph{\VAR{ress.getShorttxt()|le}}}\label{FICHE-\VAR{ress.getId()|le}}
+\selectparcours{\VAR{data.getParcoursCanonical(ress.getParcoursObjects())|le}}
 %% set year=utils.semestre2year(ress.getSemestreList()[0])|le
 %% set comps=data.getPossibleCompObjects(ress.getParcoursObjects(),year)
-%% set t=comps.__len__()
+%% set t=comps|length
 %% set dimens={'oneinmany':'{0:.3f}mm'.format((190.0-(t+1)*0.2-t*4.0)/t),'allbutoneinmany':'{0:.3f}mm'.format((190.0-3*0.2-2*4.0)-(190.0-(t+1)*0.2-t*4.0)/t),'all':'{0:.3f}mm'.format((190.0-2*0.2-1*4.0)/1)}
 %% set tabularformat='|'+('>{\\centering\\arraybackslash}p{'+dimens['oneinmany']+'}|')*t
 %% set mconeleft='\\multicolumn{1}{|>{\\bfseries\\RaggedRight\\arraybackslash}p{'+dimens['oneinmany']+'}|}'
 %% set mcallright='\\multicolumn{'+'{0}'.format(t-1)+'}{>{\\RaggedRight\\arraybackslash}p{'+dimens['allbutoneinmany']+'}|}'
 %% set mcone='\\multicolumn{'+'{0}'.format(t)+'}{|>{\\bfseries\\centering\\arraybackslash}p{'+dimens['all']+'}|}'
 %% set semestres=ress.getSemestreList()
-%% set goodapc=ress.getAPCObjects()
+%% set goodac=ress.getACObjects()
 %% set allsaes=data.getSAEObjects()
 %% set source=data.getHoursBlock(ress.getId())
 %% set resstot=source.sumIn(['TP','TD'])-source.sumOut(['TP','TD'])
@@ -25,7 +26,7 @@
     \VAR{utils.formatObjects('Compétence `getNum`',comps)|le|join(' & ')}
     \\\hline
     %% for c in comps
-    %% for apc in goodapc if apc.getCompId()==c.getId()
+    %% for ac in goodac if ac.getCompId()==c.getId()
     %% if loop.first
     \VAR{c.getNiveauDict(year).values()|elegantjoin|le}
     %% endif
@@ -37,11 +38,11 @@
     \\\hline
     \VAR{mcone}{Apprentissages critiques}\\\hline
     %% for c in comps
-    %% for apc in goodapc if apc.getCompId()==c.getId()
+    %% for ac in goodac if ac.getCompId()==c.getId()
     %% if not loop.first
     \par
     %% endif
-    \textbf{APC \VAR{apc.getNum()|le}} \VAR{apc.getLongtxt()|le}
+    \textbf{AC \VAR{ac.getNum()|le}} \VAR{ac.getLongtxt()|le}
     %% endfor
     %% if not loop.last
                          &
@@ -55,7 +56,7 @@
                                       \par
                                       %% endif
                                       %% else
-                                      ---
+                                      —
                                       %% endfor
                                       }\\\hline
     \VAR{mconeleft}{Prérequis} & \VAR{mcallright}{
@@ -65,7 +66,7 @@
                                  ;
                                  %% endif
                                  %% else
-                                 ---
+                                 —
                                  %% endfor
                                  }\\\hline
     
@@ -75,7 +76,7 @@
                            %% set sav=ress.getSavoirsList()
                            %% if sav|length>0
     Les savoirs de référence suivants devront être étudiés :
-    \begin{itemize}[nosep,topsep=0pt,label=\textbullet,leftmargin=1pc,labelsep=*]
+    \begin{itemize}[nosep,topsep=0pt,label=\textitemize,leftmargin=1pc,labelsep=*]
       %% for s in sav
     \item \VAR{s|le}
       %% endfor
@@ -89,7 +90,7 @@
                            %% if keywords|length > 0
                            \VAR{keywords|join(', ')|le}
                            %% else
-                           ---
+                           —
                            %% endif
                            }\\\hline
     \VAR{mconeleft}{Heures de formation} & \VAR{mcallright}{
@@ -97,4 +98,3 @@
                                            }\\\hline
   \end{tabular}
 \end{center}
-\fancyfoot[R]{2021\\\VAR{data.getId()|le} (parcours \VAR{ress.getParcoursLettres()|elegantjoin|le})}

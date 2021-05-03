@@ -37,7 +37,7 @@
 \usepackage{tabularx,ragged2e}
 \usepackage{colortbl}%
 \usepackage[french]{babel}
-\usepackage{enumitem}
+\usepackage{enumitem,xspace}
 % \def\hoursdisp#1h#2\relax{\makebox[1.5em]{\hfill #1}}
 \newcolumntype{H}{r}
 
@@ -58,28 +58,34 @@
 \setlength{\parindent}{0pt}
 \setlength{\tabcolsep}{2mm}\setlength{\arrayrulewidth}{.2mm}
 \fancyhf{}
+
 \fancypagestyle{BO}{%
   \fancyhf{}%
-  \fancyhead[C]{\VAR{data.getVersion()}}
+%  \fancyhead[C]{\VAR{data.getVersion()|le}}
   \fancyhead[R]{\thepage}
-  \fancyfoot[L]{©~Ministère de l'Enseignement supérieur, de la Recherche et de l'Innovation\\\ul{http://www.enseignementsup-recherche.gouv.fr}}
-  %% set allletters=utils['parcoursLettres'](data.getParcoursObjects())
-  \fancyfoot[R]{2021\\\VAR{data.getId()} (parcours \VAR{allletters|elegantjoin})}
+  \fancyfoot[L]{©~Ministère de l'Enseignement supérieur, de la Recherche et de l'Innovation\\http://www.enseignementsup-recherche.gouv.fr}
+  \fancyfoot[R]{2021\\\VAR{data.getId()|le} (\leparcours)}
   \renewcommand{\headrulewidth}{0pt}
 }
+
+\newcommand{\selectallparcours}{\def\leparcours{\VAR{data.getParcoursCanonical(data.getParcoursObjects())|le}}}
+\newcommand{\selectparcours}[1]{\gdef\leparcours{#1}}
+\selectallparcours
+
 % Only three sizes of titles (including normalsize)
 \usepackage{titlesec}
 \titleformat{\section}{\normalfont\fontsize{16}{22}\bfseries}{\thesection.~}{0em}{}
 \titleformat{\subsection}{\normalfont\fontsize{13}{16}\bfseries}{\alph{subsection}.~}{0em}{}
 \titleformat{\subsubsection}{\normalfont\fontsize{10}{12}\bfseries}{}{0em}{}
 \pagestyle{BO}
-
+\newcommand{\textitemize}{–\xspace}
+\newcommand{\textitemizesecondary}{\textbullet\xspace}
 
 \begin{document}
 %% include 'Cover.tex'
 \newpage
 \section*{Présentation générale de la spécialité et des parcours}
-Ce document présente le programme national du B.U.T \VAR{data.getId()}
+Ce document présente le programme national du B.U.T \VAR{data.getId()|le}
 et complète l’annexe 1 de l’arrêté relatif aux programmes nationaux de
 la licence professionnelle-bachelor universitaire de technologie.
 
@@ -94,32 +100,18 @@ la licence professionnelle-bachelor universitaire de technologie.
 %% endfor
 
 \section*{Référentiel d’activités et de compétences de la spécialité}
-%% for p in data.getParcoursObjects(forceNormal=True)
-\includepdf[nup=1x2,scale=.85,pages=-,pagecommand={\thispagestyle{BO}}]{assets/\VAR{data.getShortId()}_\VAR{p.getId()}.pdf}
+%% for p in data.getParcoursObjects(all=True,forceNormal=True)
+\includepdf[nup=1x2,scale=.85,pages=-,pagecommand={\thispagestyle{BO}\selectparcours{\VAR{data.getParcoursCanonical(p)|le}}}]{assets/\VAR{data.getShortId()|le}_\VAR{p.getId()|le}.pdf}
 %% endfor
-
+\selectallparcours
 \section{Référentiel de formation}
 \subsection{Tableau croisant les compétences, les SAÉ et les ressources}
 %% for p in data.getParcoursObjects()
-\includepdf[scale=1,pages=-,pagecommand={\thispagestyle{BO}}]{assets/\VAR{data.getShortId()}_ANNEXEA_\VAR{p.getId()}.pdf}
+\includepdf[scale=1,pages=-,pagecommand={\thispagestyle{BO}\selectparcours{\VAR{data.getParcoursCanonical(p)|le}}}]{assets/\VAR{data.getShortId()|le}_ANNEXEA_\VAR{p.getId()|le}.pdf}
 %% endfor
+\selectallparcours
 
-%% for sem in data.getSemestres()
-%% for parcours in data.getParcoursObjects(semestre=sem) 
-%% include 'Index.tex'
-%% endfor
-%% endfor
-%% for sem in data.getSemestres()
-%% for parcours in data.getParcoursObjects(semestre=sem) 
-%% include 'Coeffs.tex'
-%% endfor
-%% endfor
-%% for year in data.getYears()
-%% for parcours in data.getParcoursObjects(year=year)
-%% include 'Matrice.tex'
-%% endfor
-%% endfor
-
+\newpage
 \subsection{Cadre général}
 \subsubsection*{Les situations d’apprentissage et d’évaluation}
 Les SAÉ permettent l’évaluation en situation de la compétence. Cette
@@ -153,7 +145,11 @@ dans un cadre universitaire ou extérieur, tels que des ateliers, des
 études, des challenges, des séminaires, des immersions au sein d’un
 environnement professionnel, des stages, etc.
 
-\subsubsection*{La démarche portfolio}
+\subsubsection*{La démarche portfolio}%
+%% for portfolio in data.getPortfolioObjects()
+\label{FICHE-\VAR{portfolio.getId()|le}}%
+%% endfor
+
 Nommé parfois portefeuille de compétences ou passeport professionnel, le
 portfolio est un point de connexion entre le monde universitaire et le
 monde socio-économique. En cela, il répond à l’ensemble des dimensions
@@ -189,7 +185,7 @@ objectifs et les compétences ciblées. Il assure également un
 accompagnement de l’étudiant dans sa propre définition d’une stratégie
 personnelle et dans la construction de son identité professionnelle, en
 cohérence avec les métiers et les situations professionnelles couverts
-par la spécialité « \VAR{data.getId()} » et les parcours associés. Enfin, le PPP prépare
+par la spécialité « \VAR{data.getId()|le} » et les parcours associés. Enfin, le PPP prépare
 l’étudiant à évoluer tout au long de sa vie professionnelle, en lui
 fournissant des méthodes d’analyse et d’adaptation aux évolutions de la
 société, des métiers et des compétences.  Par sa dimension personnelle,
@@ -227,19 +223,21 @@ enjeux d’évaluation des compétences.
 %% set ls=data.getSAEObjects(semestre=sem)
 %% set lr=data.getRessourceObjects(semestre=sem)
 %% for ll,lname in [(ls,'SAÉ'),(lr,'Ressources')]
-\textbf{Semestre \VAR{sem}, \VAR{lname}}\\
+\textbf{Semestre \VAR{sem|le}, \VAR{lname}}\\
 %% for l in ll
-\makebox[\linewidth]{\quad \hyperref[FICHE-\VAR{l.getId()}]{\VAR{l.getId()}~\VAR{l.getLongtxt()}}\dotfill\pageref{FICHE-\VAR{l.getId()}}}\par
+\makebox[\linewidth]{\quad \hyperref[FICHE-\VAR{l.getId()|le}]{\VAR{l.getId()|le}~\VAR{l.getLongtxt()|le}}\dotfill\pageref{FICHE-\VAR{l.getId()|le}}}\par
 %% endfor
 %% endfor
 %% endfor
-%% set ls=data.getSAEObjects()
+%% for sem in data.getSemestres()
+%% set ls=data.getSAEObjects(semestre=sem)
+%% set lr=data.getRessourceObjects(semestre=sem)
 %% for sae in ls
 %% include 'SAE.tex'
 %% endfor
-%% set lr=data.getRessourceObjects()
 %% for ress in lr
 %% include 'Ressource.tex'
+%% endfor
 %% endfor
 \section{Dispositions particulières}
 Non-applicable.

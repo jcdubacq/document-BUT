@@ -91,6 +91,8 @@ def merge(l):
     return(r)
 
 def hours2string(a):
+    if isinstance(a,str):
+        a=float(a)
     hour=math.floor(a)
     minu=math.floor(a*60-hour*60)
     if minu>9:
@@ -125,8 +127,6 @@ def year2semestre(a):
         return [str(idx*2-1),str(idx*2)]
     raise Exception('Key '+str(int(idx))+' out of range')
 
-def parcoursLettres(a):
-    return Parcours.lettres(a)
 def copyAssets(inpath,out):
     if not os.path.exists(inpath):
         return 0
@@ -139,8 +139,18 @@ def copyAssets(inpath,out):
             shutil.copy(ffile, out)
     return c
 
+def sumCoeffs(array,**args):
+    a=0.0
+    for c in array:
+        if 'module' in args:
+            x=c.getCoeff(args['module'])
+            if x != None:
+                a+=float(x[1])
+        else:
+            a+=float(c.getCoeffs(**args)[1])
+    return(a)
 
-utils={'parcoursLettres': parcoursLettres,'hours': hours2string,'formatObjects':formatObjects,'semestre2year':semestre2year}
+utils={'formatObjects':formatObjects,'semestre2year':semestre2year,'sumCoeffs': sumCoeffs}
 
 class Printer:
     def __init__(self,REF,mode):
@@ -170,8 +180,9 @@ class Printer:
         onebase=one[0]
         onebasestripped=re.sub(self.suffix,'',onebase)
         onesubject=one[1]
+        oneversion=self.REF.getShortVersion()
         onedict=one[2]
-        filename=self.REF.getShortId()+'_'+onebasestripped+'_'+str(onesubject)+self.suffix
+        filename=self.REF.getShortId()+'_'+onebasestripped+'_'+str(onesubject)+'_'+oneversion+self.suffix
         outpath=os.path.join(self.outpath,filename)
         onedict['data']=self.REF
         onedict['subject']=onesubject
@@ -222,6 +233,14 @@ class LaTeXPrinter(Printer):
             dirname=os.path.dirname(texfile)
             os.chdir(dirname)
             subprocess.check_call(["lualatex",texfile])
+            logfile=texfile[0:-3]+'log'
+            rerun=False
+            with open(logfile) as log:
+                for x in log.readlines():
+                    if x[0:47]=='LaTeX Warning: Label(s) may have changed. Rerun':
+                        rerun=True
+            if (rerun):
+                subprocess.check_call(["lualatex",texfile])
             os.chdir(wd)
 class HTMLPrinter(Printer):
     def _specific(self):
@@ -293,7 +312,7 @@ class Comp(DataBlobAsDict):
     _blob='Comp'
     def __init__(self,id: str):
         super().__init__(id)
-        self.apc=[]
+        self.ac=[]
         self.coeffs={}
     def getNum(self):
         try:
@@ -314,8 +333,8 @@ class Comp(DataBlobAsDict):
             elif 'activiteshort' in self.data['activite']:
                 return self.data['activite']['activiteshort']
         return '[?'+self.id+'?]'
-    def addAPC(self,apc):
-        self.apc.append(apc)
+    def addAC(self,ac):
+        self.ac.append(ac)
     def getDescriptionList(self):
         try:
             dictionary=self._getData('comptxt',fail=True)
@@ -331,15 +350,15 @@ class Comp(DataBlobAsDict):
             return self._getData('niveau'+str(year),idx=k,fail=True)
         raise Exception('Year {} is out of range'.format(year))
     
-    def getAPCObjects(self,semestre=None,year=None):
+    def getACObjects(self,semestre=None,year=None):
         if semestre==None and year==None:
-            return self.apc
+            return self.ac
         a=[]
         if semestre != None:
             year=semestre2year(semestre)
-        for apc in self.apc:
-            if int(apc.getLevel())==year:
-                a.append(apc)
+        for ac in self.ac:
+            if int(ac.getLevel())==year:
+                a.append(ac)
         return a
 class NormalComp(Comp):
     def _isNormal(self):
@@ -350,11 +369,19 @@ class NormalComp(Comp):
         if moduleobj.getId() in self.coeffs:
             return self.coeffs[moduleobj.getId()]
         return None
-    def getCoeffs(self,ressources=False,sae=False,semestre=None,onlyType=None):
+    def getCoeffs(self,semestre=None,onlyType=None):
         if 'RESS' in onlyType:
             ressources=True
+        else:
+            ressources=False
         if 'SAE' in onlyType:
             sae=True
+        else:
+            sae=False
+        if 'PORTFOLIO' in onlyType:
+            portfolio=True
+        else:
+            portfolio=False
         a=0
         b=[]
         for i in self.coeffs:
@@ -368,6 +395,9 @@ class NormalComp(Comp):
             if module.subtype()==Module.SUBTYPE_SAE and sae:
                 a+=int(value)
                 b.append(module)
+            if module.subtype()==Module.SUBTYPE_PORTFOLIO and portfolio:
+                a+=int(value)
+                b.append(module)
         return (b,a)
 class TransversalComp(Comp):
     def __init__(self):
@@ -376,26 +406,30 @@ class TransversalComp(Comp):
     def isPlural(self):
         return 2
     def getLongtxt(self):
-        return 'Toutes les compétences (enseignement transversal)'
+        return 'Toutes les compétences'
     def getShorttxt(self):
         return 'Transversal'
+    def getNiveauDict(self,year: int):
+        if year>0 and year<4:
+            return {'niveau'+str(year):''}
+        raise Exception('Year {} is out of range'.format(year))
 
 
-class APC(DataBlob):
+class AC(DataBlob):
     def __init__(self,id: str,comp: Comp):
         self.id=id
         self.compref=comp
         self.txt=None
         self.level=None
-        comp.addAPC(self)
+        comp.addAC(self)
         self.data={}
     def addInfo(self,code,value):
-        if (code=='apc'):
+        if (code=='ac'):
             self.txt=value
             self.short=re.sub(r" *\([^)]*\)", "", value)
-        elif (code=='apcnum'):
+        elif (code=='acnum'):
             self.num=value
-        elif (code=='apclevel'):
+        elif (code=='aclevel'):
             self.level=value
         else:
             # Unknown code, forward compatibility
@@ -416,11 +450,11 @@ class APC(DataBlob):
         return self.num
     def getShortonly(self):
         return self.short
-class TransversalAPC(APC):
+class TransversalAC(AC):
     def __init__(self,comp):
         super().__init__('TRANSVERSAL',comp)
-        self.addInfo('apcnum',0)
-        self.addInfo('apc','Tous les apprentissages critiques (enseignement transversal)')
+        self.addInfo('acnum',0)
+        self.addInfo('ac','Tous les apprentissages critiques (enseignement transversal)')
     def isPlural(self):
         return 2
     def getLongtxt(self,level=False):
@@ -442,14 +476,16 @@ class Referentiel:
         self.PARCOURS={}
         self.SAE={}
         self.RESS={}
-        self.APC={}
+        self.AC={}
+        self.PORTFOLIO={}
         self.HOURS={}
         self.COMP['TRANSVERSAL']=TransversalComp()
-        self.APC['TRANSVERSAL']=TransversalAPC(self.COMP['TRANSVERSAL'])
+        self.AC['TRANSVERSAL']=TransversalAC(self.COMP['TRANSVERSAL'])
         self.introduction={}
         self.introductionparcours={}
         self.introductionparcoursref={}
         self.printer=[]
+        self.PORTFOLIOCODES=[]
     def addTroncCommun(self,id: str):
         self.PARCOURS[id]=ParcoursCommun(id,self.PARCOURS)
     def getId(self):
@@ -458,6 +494,12 @@ class Referentiel:
         return re.sub(r'[^a-zA-Z0-9]','',self.shortname)
     def getVersion(self):
         return self.version
+    def getShortVersion(self):
+        x=re.match(r'^([.A-Za-z0-9]*).*$',self.version)
+        if x:
+            return x.group(1)
+        else:
+            return self.version
     def getNumber(self):
         return self.number
     def getHoursBlock(self,k,fail=False):
@@ -487,16 +529,22 @@ class Referentiel:
                 raise Exception('SAE {} not found'.format(k))
             self.SAE[k]=SAE(k)
         return self.SAE[k]
-    def getAPC(self,k,comp=None,fail=False):
-        if k not in self.APC:
+    def getPortfolio(self,k,fail=False):
+        if k not in self.PORTFOLIO:
+            if fail:
+                raise Exception('Portfolio {} not found'.format(k))
+            self.PORTFOLIO[k]=Portfolio(k)
+        return self.PORTFOLIO[k]
+    def getAC(self,k,comp=None,fail=False):
+        if k not in self.AC:
             if fail or comp==None:
-                raise Exception('Unknown APC ({})'.format(k))
+                raise Exception('Unknown AC ({})'.format(k))
             else:
                 compObject=self.getComp(comp,fail)
-                self.APC[k]=APC(k,compObject)
-        return self.APC[k]
-    def getAPCList(self):
-        return self.APC.values()
+                self.AC[k]=AC(k,compObject)
+        return self.AC[k]
+    def getACList(self):
+        return self.AC.values()
     def getRessource(self,k,fail=False):
         if k not in self.RESS:
             if fail:
@@ -505,7 +553,7 @@ class Referentiel:
         return self.RESS[k]
     def getModuleObjects(self,onlyType=None,semestre=None,year=None,parcours=None,interparcours=None):
         r=set()
-        all=set(self.RESS.values())|set(self.SAE.values())
+        all=set(self.RESS.values())|set(self.SAE.values())|set(self.PORTFOLIO.values())
         if onlyType==None:
             r=all
         else:
@@ -514,6 +562,8 @@ class Referentiel:
                     r=r.union(self.SAE.values())
                 if t=='RESS':
                     r=r.union(self.RESS.values())
+                if t=='PORTFOLIO':
+                    r=r.union(self.PORTFOLIO.values())
         if year!=None or semestre!=None:
             sems=[]
             if year!=None:
@@ -539,13 +589,20 @@ class Referentiel:
         return self.getModuleObjects(onlyType=['RESS'],**args)
     def getSAEObjects(self,**args):
         return self.getModuleObjects(onlyType=['SAE'],**args)
+    def getPortfolioObjects(self,**args):
+        return self.getModuleObjects(onlyType=['PORTFOLIO'],**args)
     def getParcours(self,k,fail=False):
         if k not in self.PARCOURS:
             if fail:
                 raise Exception('Parcours {} not found'.format(k))
             self.PARCOURS[k]=Parcours(k)
         return self.PARCOURS[k]
-    def getParcoursObjects(self,semestre=None,year=None,forceNormal=False,parcours=None,interparcours=None):
+    def getParcoursObjects(self,all=False,semestre=None,year=None,forceNormal=False,parcours=None,interparcours=None):
+        if all:
+            if forceNormal:
+                return sorted([x for x in self.PARCOURS.values() if x.isNormal()],key=lambda x:x.getId())
+            else:
+                return sorted(self.PARCOURS.values(),key=lambda x:x.getId())
         sm=self.getModuleObjects(semestre=semestre,year=year,parcours=parcours,interparcours=interparcours)
         parc=set()
         for m in sm:
@@ -559,19 +616,26 @@ class Referentiel:
             
     def updateObjects(self):
         for r in self.RESS.values():
-            for a in r.getAPCList():
-                r.addInfo('apcobject',self.getAPC(a,fail=True))
+            for a in r.getACList():
+                r.addInfo('acobject',self.getAC(a,fail=True))
             for a in r.getParcoursList():
                 r.addInfo('parcoursobject',self.getParcours(a,fail=True))
             for a in r.getPrerequisList():
                 r.addInfo('prerequisobject',self.getRessource(a,fail=True))
         for s in self.SAE.values():
-            for a in s.getAPCList():
-                s.addInfo('apcobject',self.getAPC(a,fail=True))
+            for a in s.getACList():
+                s.addInfo('acobject',self.getAC(a,fail=True))
             for a in s.getParcoursList():
                 s.addInfo('parcoursobject',self.getParcours(a,fail=True))
             for a in s.getCompList():
                 s.addInfo('cibleobject',self.getComp(a,fail=True))
+            for a in s.getRessourceList():
+                s.addInfo('ressobject',self.getRessource(a,fail=True))
+        for s in self.PORTFOLIO.values():
+            for a in r.getACList():
+                s.addInfo('acobject',self.getAC(a,fail=True))
+            for a in r.getParcoursList():
+                s.addInfo('parcoursobject',self.getParcours(a,fail=True))
             for a in s.getRessourceList():
                 s.addInfo('ressobject',self.getRessource(a,fail=True))
     def getSemestres(self,year=None):
@@ -626,13 +690,13 @@ class Referentiel:
         if compid not in self.COMP:
             raise Exception('Coefficient with bad CompId {}'.format(compid))
         comp=self.COMP[compid]
-        isRess=True
         module=None
-        if moduleid not in self.RESS and moduleid not in self.SAE:
+        if moduleid not in self.RESS and moduleid not in self.SAE and moduleid not in self.PORTFOLIO:
             raise Exception('Coefficient with bad ModuleId {}'.format(moduleid))
         elif moduleid in self.SAE:
-            isRess=False
             module=self.SAE[moduleid]
+        elif moduleid in self.PORTFOLIO:
+            module=self.PORTFOLIO[moduleid]
         else:
             module=self.RESS[moduleid]
         module.addCoeff(comp,value)
@@ -650,7 +714,26 @@ class Referentiel:
             a.append(b)
         return a
             
-
+    def getParcoursCanonical(self,plist,lower=True):
+        pris=set()
+        liste=plist
+        if isinstance(plist,Parcours):
+            liste=[plist]
+        if len(liste)==1:
+            return liste[0].getCanonical(lower)
+        for p in liste:
+            pris=pris|p.getExpandedSet()
+        for p in self.PARCOURS.values():
+            expansion=p.getExpandedSet()
+            if len(pris&expansion)==len(pris) and len(pris)==len(expansion):
+                return p.getCanonical(lower)
+        if lower:
+            s='parcours '
+        else:
+            s='Parcours '
+        s+=elegantjoin(sorted([x.getLettreList()[0] for x in pris]))
+        return(s)
+        
 class Source:
     def __init__(self,id):
         self.data={'in':{},'out':{}}
@@ -703,7 +786,8 @@ class Source:
 class Module(DataBlob):
     _blob='Module'
     SUBTYPE_SAE='SAE'
-    SUBTYPE_RESS='Ressource'
+    SUBTYPE_RESS='RESS'
+    SUBTYPE_PORTFOLIO='PORTFOLIO'
     def __init__(self,id):
         super().__init__(id)
         self.coeffs=[]
@@ -727,16 +811,13 @@ class Module(DataBlob):
         return self._getData('parcours')
     def getParcoursObjects(self):
         return self._getData('parcoursobject')
-    def getParcoursLettres(self):
-        r=set()
-        for p in self._getData('parcoursobject'):
-            a=set(p.getLettreList())
-            r=r.union(a)
-        return sorted(list(r))
-    def getAPCList(self):
-        return self._getData('apc')
-    def getAPCObjects(self):
-        return sorted(self._getData('apcobject'),key=lambda x:x.getNum())
+    def getACList(self):
+        return self._getData('ac')
+    def getACObjects(self,comp=None):
+        if comp==None:
+            return sorted(self._getData('acobject'),key=lambda x:x.getNum())
+        cid=comp.getId()
+        return sorted([x for x in self._getData('acobject') if x.getCompId()==cid],key=lambda x:x.getNum())
     def getDescriptionList(self):
         return self._getData('desc')
     def addCoeff(self,compobj,value):
@@ -750,7 +831,7 @@ class SAE(Module):
         self.exemple={}
         # Specific to SAE : Comp, Preco, Ressource, Livrable, Exemples
     def subtype(self):
-        return 'SAE'
+        return Module.SUBTYPE_SAE
     def getCompList(self):
         return self._getData('cible')
     def getCompObjects(self):
@@ -776,6 +857,10 @@ class SAE(Module):
         r.sort()
         return [self.exemple[x] for x in r]
 
+class Portfolio(SAE):
+    _blob='PORTFOLIO'
+    def subtype(self):
+        return Module.SUBTYPE_PORTFOLIO
 
 class ExempleSAE(DataBlob):
     def __init__(self,sae_id,id):
@@ -799,7 +884,7 @@ class Ressource(Module):
     _blob="Ressource"
     # Specific to Ressource : Prerequis, Keywords, Objectif, Savoirs
     def subtype(self):
-        return 'Ressource'
+        return Module.SUBTYPE_RESS
     def getPrerequisList(self):
         return self._getData('prerequis')
     def getPrerequisObjects(self):
@@ -812,24 +897,34 @@ class Ressource(Module):
         return self._getData('savoir')
     def getCoeffs(self):
         return self._getData('coeffs')
+    def getCoeffs(self):
+        return self._getData('coeffs')
+    def getDisciplineList(self):
+        d=self._getData('discipline')
+        p=self._getData('pole')
+        a=[]
+        for i in range(0,len(d)):
+            b=[d[i]]
+            if i<len(p) and p[i] and p[i]!=d[i]:
+                b.append(p[i])
+            a.append(b)
+        return a
+            
 
 
 class Parcours(DataBlob):
-    def shortname(liste):
-        pris={}
-        for p in liste:
-            for l in p.getLettreList():
-                pris[l]=1
-                t=list(pris.keys())
-                t.sort()
-        return(elegantjoin(t))
-    def lettres(liste):
-        pris=set()
-        for p in liste:
-            pris=pris.union(set(p.getLettreList()))
-        t=list(pris)
-        t.sort()
-        return(t)
+    def getCanonical(self,lower=True):
+        if 'canonical' in self.data:
+            if lower:
+                s=self.data['canonical'][0][0].lower()
+            else:
+                s=self.data['canonical'][0][0].upper()
+            return s+self.data['canonical'][0][1:]
+        if lower:
+            s='parcours '
+        else:
+            s='Parcours '
+        return s+' '+self._getData('lettre')[0]
     def intersects(self,p):
         a=self.getLettreList()
         b=p.getLettreList()
@@ -840,7 +935,7 @@ class Parcours(DataBlob):
     def isNormal(self):
         return True
     def getExpandedSet(self):
-        return set(self)
+        return {self}
     def getLettreList(self):
         return self._getData('lettre')
     def getComps(self,year):
@@ -861,10 +956,17 @@ class ParcoursCommun(Parcours):
         return len(self.others)
     def isNormal(self):
         return False
-    def __init__(self,id,pdict,name="Tronc commun"):
+    def getCanonical(self,lower=True):
+        if lower:
+            s=self.data['canonical'][0][0].lower()
+        else:
+            s=self.data['canonical'][0][0].upper()
+        return s+self.data['canonical'][0][1:]
+    def __init__(self,id,pdict,name="Tronc commun",canonical="tous parcours"):
         super().__init__(id)
         self.others=[]
         self.data['nom']=[name]
+        self.data['canonical']=[canonical]
         for x in pdict:
             if pdict[x].isNormal():
                 self.others.append(pdict[x])
@@ -894,8 +996,8 @@ class ReaderCSV:
         code=row[2]
         value=row[3]
         comp=self.REF.getComp(compcode)
-        if infotype[0:3]=='apc':
-            self.REF.getAPC(code,compcode).addInfo(infotype,value)
+        if infotype in ['ac','aclevel', 'acnum']:
+            self.REF.getAC(code,compcode).addInfo(infotype,value)
         else:
             comp.addInfo(infotype,code,value)
     def readRowFromParcours(self,row):
@@ -913,6 +1015,9 @@ class ReaderCSV:
         value=row[1]
         if len(resscode)>0:
             self.REF.getRessource(resscode,fail=True).addInfo('savoir',value)
+    def readRowFromPortfolio(self,row):
+        resscode=row[0]
+        self.REF.PORTFOLIOCODES.append(resscode)
     def readRowFromCoeffs(self,row):
         resscode=row[0]
         infotype=row[1]
@@ -924,15 +1029,17 @@ class ReaderCSV:
         rkey=row[0]
         code=row[2]
         order=row[3]
+        if rkey in self.REF.PORTFOLIOCODES:
+            sae=self.REF.getPortfolio(rkey)
+        else:
+            sae=self.REF.getSAE(rkey)
         if infotype[0:7]=='exemple':
             if re.match(r'^[0-9]+$',order) and int(order)>0:
-                sae=self.REF.getSAE(rkey)
                 exemple=sae.getExemple(order)
                 exemple.addInfo(infotype[7:],code)
             else:
                 raise Exception('No order for example ({})'.format(str(row)))
         elif len(rkey)>0:
-            sae=self.REF.getSAE(rkey)
             sae.addInfo(infotype,code)
     def readRowFromHoraires(self,row):
         nature=row[1]
@@ -959,6 +1066,8 @@ class ReaderCSV:
             self.REF.introductionparcours[order]=value
         if key=='introductionparcoursref':
             self.REF.introductionparcoursref[order]=value
+        if key=='url':
+            self.REF.url=value
     def readDataFromFile(self,filename,funcname):
         with open(filename) as csvfile:
             data = csv.reader(csvfile,delimiter='\t',quotechar='"')
@@ -974,6 +1083,7 @@ class ReaderCSV:
     def readData(self):
         self.readDataFromFile('BUT/REF.tsv','readRowFromRef')
         self.readDataFromFile('BUT/COMP.tsv','readRowFromComp')
+        self.readDataFromFile('BUT/PORTFOLIO.tsv','readRowFromPortfolio')
         self.readDataFromFile('BUT/SAE.tsv','readRowFromSAE')
         self.readDataFromFile('BUT/Horaires.tsv','readRowFromHoraires')
         self.readDataFromFile('BUT/RESS.tsv','readRowFromRess')
@@ -983,21 +1093,37 @@ class ReaderCSV:
         self.REF.addTroncCommun('TRONCCOMMUN')
         self.REF.updateObjects()
 
+
 REF=Referentiel()
 ReaderCSV(REF).readData()
 
-jobs=sys.argv
-if len(sys.argv)==1:
-    jobs=['BO','HTML']
+jobs=[]
+jobsn=0
+for arg in sys.argv[1:]:
+    x=re.match(r'^version=(.*)$',arg)
+    if x:
+        REF.version=x.group(1)
+    else:
+        files = os.listdir(os.path.join('.',arg))
+        if files:
+            if 'Referentiel.tex' in files:
+                jobs.append((arg,'LaTeX','Referentiel.tex',REF.version))
+            if 'Referentiel.html' in files:
+                jobs.append((arg,'HTML','Referentiel.html',REF.version))
+            jobsn+=1
+if jobsn==0:        
+    jobs=[('ACDI','LaTeX','Referentiel.tex')]
 
 for arg in jobs:
-    if arg=='BO':
-        BO=LaTeXPrinter(REF,'BO')
-        BO.addTemplate('Referentiel.tex',REF.getId(),{})
-        BO.run()
+    if arg[1]=='LaTeX':
+        REF.version=arg[3]
+        oneprinter=LaTeXPrinter(REF,arg[0])
+        oneprinter.addTemplate(arg[2],REF.getId(),{})
+        oneprinter.run()
     elif arg=='HTML':
-        BOHtml=HTMLPrinter(REF,'HTMLBO')
-        BOHtml.addTemplate('Referentiel.html',REF.getId(),{})
-        BOHtml.run()
+        REF.version=arg[3]
+        oneprinter=HTMLPrinter(REF,arg[0])
+        oneprinter.addTemplate(arg[2],REF.getId(),{})
+        oneprinter.run()
 
 sys.exit(0)
