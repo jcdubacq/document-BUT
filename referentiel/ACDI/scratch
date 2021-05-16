@@ -1,0 +1,15 @@
+
+
+
+
+
+
+    %% for c in comps:
+    %% set co=c.getCoeffs(onlyType=['RESS','SAE','PORTFOLIO'],semestre=sem)
+    %% if co
+    \textbf{\VAR{co[1]|le}}
+    %% endif
+    %% if not loop.last:
+    &
+    %% endif
+    %% endfor

@@ -1,89 +1,95 @@
-% # context : data, utils, sae
+% # context : data, utils, module
 \newpage
-\subsubsection{ANNEXE C — fiche SAÉ \VAR{sae.getId()|le} \emph{\VAR{sae.getShorttxt()|le}}}\label{FICHE-\VAR{sae.getId()|le}}
-\selectparcours{\VAR{data.getParcoursCanonical(sae.getParcoursObjects())|le}}
-%% set comps=sae.getCompObjects()
-%% set compplural=utils.formatObjects('`isPlural`',sae.getCompObjects(),toFloat=True)|sum
-%% set acplural=utils.formatObjects('`isPlural`',sae.getACObjects(),toFloat=True)|sum
-%% set source=data.getHoursBlock(sae.getId())
-%% set resstot=source.sumIn(['TP','TD'])-source.sumOut(['TP','TD'])
-%% set resstp=source.sumIn(['TP'])-source.sumOut(['TP'])
-%% set ressproj=source.sumIn(['PROJ'])-source.sumOut(['PROJ'])
-%% set precos=sae.getPrecoList()
-%% set livrables=sae.getLivrableList()
-%% set semestres=sae.getSemestreList()
-%% set exemples=sae.getExempleObjects()
+\subsubsection{ANNEXE C — fiche SAÉ \VAR{module.id|le}~\emph{\VAR{module.getShortname()|le}}}\label{FICHE-\VAR{module.id|le}}
+\selectparcours{\VAR{module.getParcours().getCanonical()|le}}
+%% set hoursout=data.getHours(source=module)
+%% set hoursin=data.getHours(destination=module)
 %% set t=2
 %% set dimens={'oneinmany':'{0:.3f}mm'.format((190.0-(t+1)*0.2-t*4.0)/t),'allbutoneinmany':'{0:.3f}mm'.format((190.0-3*0.2-2*4.0)-(190.0-(t+1)*0.2-t*4.0)/t),'all':'{0:.3f}mm'.format((190.0-2*0.2-1*4.0)/1)}
 \begin{center}%
   \begin{tabular}{|p{\VAR{dimens['oneinmany']}}|p{\VAR{dimens['oneinmany']}}|}\hline
-    Nom de la SAÉ & \VAR{sae.getId()|le}~\VAR{sae.getLongtxt()|le} \\\hline
-    Compétence\VAR{'s' if compplural>1 else ''} visée\VAR{'s' if compplural>1 else ''}
-                  & %
-                  %% for c in sae.getCompObjects()
-                  %% if c.isPlural() > 1
-                    \VAR{c.getLongtxt()|le}
-                    %% else
-                    Compétence~\VAR{c.getNum()|le}~: \VAR{c.getLongtxt()|le}%
-                    %% endif
-                    \BLOCK{if not loop.last}\BLOCK{if loop.index==loop.length}{} et \BLOCK{else}, \BLOCK{endif}\BLOCK{endif}
-                    %% endfor
+    Nom de la SAÉ & \VAR{module.id|le}~\VAR{module.getName()|le} \\\hline
+    %% set comps=module.target.values()
+    Compétence\BLOCK{for c in comps}
+    %% if not loop.last and loop.first
+    s
+    %% endif
+    \BLOCK{endfor} 
+    visée\BLOCK{for c in comps}
+    %% if not loop.last and loop.first
+    s
+    %% endif
+    \BLOCK{endfor}
+    &
+    %% for c in comps
+    %% if c.isPlural() > 1
+    \VAR{c.getLongtxt()|le}
+    %% else
+    Compétence~\VAR{c.number|le}~: \VAR{c.getName()|le}%
+    %% endif
+    \BLOCK{if not loop.last}\BLOCK{if loop.index==loop.length}{} et \BLOCK{else}, \BLOCK{endif}\BLOCK{endif}
+    %% endfor
     \\\hline
-    Description des objectifs de la SAÉ et de la problématique professionnelle associée & \VAR{sae.getDescriptionList()|le|join('\\par')} \\\hline
+    Description des objectifs de la SAÉ et de la problématique professionnelle associée
+    &
+    \VAR{module.description|le|join('\\par\n')}
+    \\\hline
+    %% set acplural=module.ac.values()|length
     Apprentissage\VAR{'s' if acplural>1 else ''} critique\VAR{'s' if acplural>1 else ''} couvert\VAR{'s' if acplural>1 else ''}
-                  & %
-                  %% for c in sae.getACObjects()
-                  %% if c.isPlural() > 1
-                    \VAR{c.getLongtxt()|le}
-                    %% else
-                    C\VAR{c.getCompNum()|le}~AC\VAR{c.getNum()|le}~: \VAR{c.getLongtxt()|le}%
-                    %% endif
-                    \BLOCK{if not loop.last}\par{}\BLOCK{endif}
-                    %% endfor
+    &
+    %% for c in module.ac.values()
+    C\VAR{c.parent.parent.number|le}~AC\VAR{c.num|le}~: \VAR{c.getName()}
+    %% if not loop.last
+    \par{}
+    %% endif
+    %% endfor
     \\\hline
-    Heures formation (dont TP) & \VAR{resstot|hours} (dont \VAR{resstp|hours} de TP)\\\hline
-    Heures \og projet tutoré \fg (dont TP) & \VAR{ressproj|hours} %
+    Heures formation (dont TP) & \VAR{(hoursin.sum(onlyType=['TP','TD'])-hoursout.sum(onlyType=['TP','TD']))|hours} (dont \VAR{(hoursin.sum(onlyType=['TP'])-hoursout.sum(onlyType=['TP']))|hours} de TP)\\\hline
+    Heures \og projet tutoré \fg & \VAR{(hoursin.sum(onlyType=['PROJ'])-hoursout.sum(onlyType=['PROJ']))|hours} %
     \\\hline
     Liste des ressources mobilisées et combinées &
-    %% for ress in sae.getRessourceObjects()
-                                                   \hyperref[FICHE-\VAR{ress.getId()|le}]{\VAR{ress.getId()|le}~\VAR{ress.getLongtxt()|le}}
-                                                   %% if not loop.last
-                                                   \par
-                                                   %% endif
-                                                   %% else
-                                                   —
-                                                   %% endfor
+    %% set allress=data.getModule(onlyType='RESS',semestre=module.sem)|sort(attribute='id')
+    %% for ress in allress if ress in hoursin.sources() or ress in module.ress.values()
+    \hyperref[FICHE-\VAR{ress.id|le}]{\VAR{ress.id|le}~\VAR{ress.getName()|le}}
+    %% if not loop.last
+    \par
+    %% endif
+    %% else
+    —
+    %% endfor
     \\\hline
     Types de livrable ou de production &%
+    %% set livrables=module.production
     %% if livrables|length>0
-                                         \begin{itemize}[nosep,topsep=0pt,label=\textitemize,leftmargin=1pc,labelsep=*]
-                                           %% for l in livrables
-                                         \item \VAR{l|le}
-                                           %% endfor
-                                         \end{itemize}%
-                                         %% endif
+    \begin{itemize}[nosep,topsep=0pt,label=\textitemize,leftmargin=1pc,labelsep=*]
+      %% for l in livrables
+    \item \VAR{l|le}
+      %% endfor
+    \end{itemize}%
+    %% endif
     \\\hline
-    Semestre\VAR{'s' if semestres.__len__()>1 else ''} & \VAR{semestres|elegantjoin|le} \\\hline
+    Semestre & \VAR{module.sem|le} \\\hline
   \end{tabular}
 \end{center}
+%% set exemples=module.model.values()
 %% if exemples|length>0
 Liste d'exemples de SAÉ~:
 \begin{itemize}[nosep,topsep=0pt,label=\textitemize,leftmargin=1pc,labelsep=*]
   %% for ex in exemples
-\item Exemple~\VAR{ex.getId()|le} \textbf{[\VAR{ex.getTitre()|le}]}~: \VAR{ex.getSynopsis()|le|join('\n\n')}
-  %% if ex.getForm()|le|join|length > 6
-  [formats pédagogiques possibles : \VAR{ex.getForm()|elegantjoin|le}]
+\item Exemple~\VAR{ex.Id|le} \textbf{[\VAR{ex.getName()|le}]}~: \VAR{ex.synopsis|le|join('\n\n')}
+  %% if ex.format|length > 6
+  [formats pédagogiques possibles : \VAR{ex.format|le}]
   %% else
-  %% if ex.getForm()|le|join|length > 0
-  [format pédagogique possible : \VAR{ex.getForm()|elegantjoin|le}]
+  %% if ex.format|length > 0
+  [format pédagogique possible : \VAR{ex.format|le}]
   %% endif
   %% endif
   \par
-  %% if ex.getProb()|le|join|length > 0
-  \textitemizesecondary Problématique professionnelle~: \VAR{ex.getProb()|le|join}\par
+  %% if ex.objective|le|join|length > 0
+  \textitemizesecondary Problématique professionnelle~: \VAR{ex.objective|le|join}\par
   %% endif
-  %% if ex.getEval()|le|join|length > 0
-  \textitemizesecondary Préconisations d'évaluation~: \VAR{ex.getEval()|le|join}\par
+  %% if ex.evaluation|le|join|length > 0
+  \textitemizesecondary Préconisations d'évaluation~: \VAR{ex.evaluation|le|join('\n\n')}\par
   %% endif
   %% endfor
 \end{itemize}

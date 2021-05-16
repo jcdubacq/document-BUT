@@ -1,0 +1,39 @@
+%% set exemples=sae.getExempleObjects()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+%% if exemples|length>0
+Liste d'exemples de SAÉ~:
+\begin{itemize}[nosep,topsep=0pt,label=\textitemize,leftmargin=1pc,labelsep=*]
+  %% for ex in exemples
+\item Exemple~\VAR{ex.getId()|le} \textbf{[\VAR{ex.getTitre()|le}]}~: \VAR{ex.getSynopsis()|le|join('\n\n')}
+  %% if ex.getForm()|le|join|length > 6
+  [formats pédagogiques possibles : \VAR{ex.getForm()|elegantjoin|le}]
+  %% else
+  %% if ex.getForm()|le|join|length > 0
+  [format pédagogique possible : \VAR{ex.getForm()|elegantjoin|le}]
+  %% endif
+  %% endif
+  \par
+  %% if ex.getProb()|le|join|length > 0
+  \textitemizesecondary Problématique professionnelle~: \VAR{ex.getProb()|le|join}\par
+  %% endif
+  %% if ex.getEval()|le|join|length > 0
+  \textitemizesecondary Préconisations d'évaluation~: \VAR{ex.getEval()|le|join}\par
+  %% endif
+  %% endfor
+\end{itemize}
+%% endif

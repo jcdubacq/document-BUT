@@ -1,56 +1,64 @@
 % # context : data, utils, sem, parcours
 %% set year=utils.semestre2year(sem)
-\newpage
-\subsubsection{Coefficients S\VAR{sem|le} — Parcours \VAR{parcours.getLettreList()|elegantjoin|le}}
-\selectparcours{\VAR{data.getParcoursCanonical(parcours)|le}}
-%% for subparc in data.getParcoursObjects(semestre=sem,interparcours=parcours)
+\subsubsection{Coefficients S\VAR{sem|le} — \VAR{parcours.getCanonical(lower=False)|le}}
+\selectparcours{\VAR{parcours.getCanonical()|le}}
+%% set lr=data.getModule(onlyType=['RESS'],semestre=sem,interparcours=parcours)
+%% set ls=data.getModule(onlyType=['SAE'],semestre=sem,interparcours=parcours)
+%% set lp=data.getModule(onlyType=['PORTFOLIO'],semestre=sem,interparcours=parcours)
+%% set comps=parcours.getCompLevel(year)|sort(attribute='id')
+%% set compn=comps|length
+%% set comptabform='r'*compn
+%% set allcolumns=compn+1
+%% set total=[]
 \begin{center}
-  %% set comps=data.getPossibleCompObjects([subparc],year)
-  %% set comptabform='c'*comps.__len__()
-  %% set allcolumns=comps.__len__()+1
   \begin{tabular}{l\VAR{comptabform}}
     \toprule
     Ressource/SAÉ
     & 
-    %% for c in comps:
-    \rotatebox{90}{C\VAR{c.getNum()|le}~\VAR{c.getShorttxt()|le}}
+    %% for c in comps
+    %% set ue=c.getUE(semestre=sem)
+    \rotatebox{90}{UE\VAR{sem|le}.\VAR{c.parent.number|le}}
     %% if not loop.last
     &
     %% endif
     %% endfor
     \\\midrule
-    %% set lr=data.getRessourceObjects(semestre=sem,parcours=subparc)
-    %% set ls=data.getSAEObjects(semestre=sem,parcours=subparc)
-    %% set lp=data.getPortfolioObjects(semestre=sem,parcours=subparc)
     %% for ll,lcode,Lname in [(ls,'SAE','SAÉ'),(lp,'PORTFOLIO','Portfolio'),(lr,'RESS','Ressources')]
     \addlinespace{}%
     \textbf{\VAR{Lname}}
-    &
-    %% set sumco=utils.sumCoeffs(comps,onlyType=[lcode],semestre=sem)
-    %% if sumco > 0
-    %% for c in comps:
-    %% set co=c.getCoeffs(onlyType=[lcode],semestre=sem)
-    %% if co
-    \textbf{\VAR{co[1]|le}}
-    %% endif
-    %% if not loop.last:
-    &
+    %% set ctot=[]
+    %% for c in comps
+    %% set ue=c.getUE(semestre=sem)
+    %% set coeffs=ue.getCoeff(module=ll)
+    %% if ctot.append(coeffs.sum())
     %% endif
     %% endfor
+    %% if total.append(ctot)
+    %% endif
+    %% if ctot|sum>0
+    %% for x in ctot
+    &
+    \textbf{\VAR{x|le}}
+    %% endfor
     %% else
-    \multicolumn{\VAR{allcolumns-1}}{c}{\rule{0ex}{2ex}Non évalué ce semestre}
+    & \multicolumn{\VAR{allcolumns-1}}{c}{\rule{0ex}{2ex}\emph{Non évalué ce semestre}}
     %% endif
     \\
     %% for m in ll
-    \hyperref[FICHE-\VAR{m.getId()|le}]{\VAR{m.getId()|le} \VAR{m.getLongtxt()|le}}
+    \hyperref[FICHE-\VAR{m.id|le}]{\VAR{m.getCanonical()|le}}
     &
-    %% set sumco=utils.sumCoeffs(comps,module=m)
-    %% if sumco > 0
-    %% for c in comps:
-    %% set co=c.getCoeff(m)
-    %% if co
-    \VAR{co[1]|le}
+    %% set sumco=[]
+    %% for co in m.getCoeff()
+    %% set v=co.value|int
+    %% if sumco.append(v)
     %% endif
+    %% endfor
+    %% if sumco|sum > 0
+    %% for c in comps
+    %% set co=m.getCoeff(c.parent)
+    %% for coeff in co
+    \VAR{coeff.value|le}
+    %% endfor
     %% if not loop.last:
     &
     %% endif
@@ -62,18 +70,34 @@
     %% endfor
     %% endfor
     \addlinespace\textbf{Total}
+    %% for x in total[0]
     &
-    %% for c in comps:
-    %% set co=c.getCoeffs(onlyType=['RESS','SAE','PORTFOLIO'],semestre=sem)
-    %% if co
-    \textbf{\VAR{co[1]|le}}
-    %% endif
-    %% if not loop.last:
-    &
-    %% endif
+    \textbf{\VAR{(x+total[1][loop.index0]+total[2][loop.index0])|le}}
     %% endfor
     \\
     \bottomrule
   \end{tabular}
+  \bigskip
+  
+  \begin{tabular}{l@{\hspace{2pt}}p{11cm}lrrrr}
+    \toprule
+    \multicolumn{2}{l}{\textbf{Compétence}}&\textbf{UE}&\textbf{SAÉ}&\textbf{Po.}&\textbf{Re.}&\textbf{ECTS}\\
+    \midrule
+    %% for c in comps
+    %% set ue=c.getUE(semestre=sem)
+    \textbf{C\VAR{c.parent.number|le}}& \VAR{c.parent.getName()|le} &
+    UE\VAR{sem|le}.\VAR{c.parent.number|le}
+    %% set outerloop=loop
+    %% for t in total
+    & \VAR{t[outerloop.index0]|le}
+    %% endfor
+    & \VAR{ue.ects|le}\\
+    &
+    \multicolumn{6}{@{\hspace{2pt}}l}{\small\emph{\VAR{c.getName()|le}}}\\
+    %% endfor
+    \bottomrule
+  \end{tabular}
+  
 \end{center}
-%% endfor
+
+

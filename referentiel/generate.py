@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-
+from pprint import pprint
 import sys,os,re
 import shutil
 import csv
@@ -7,10 +7,13 @@ import subprocess
 import math
 import jinja2
 import os
+import datetime
+
 from jinja2 import Template
 from locale import atof, setlocale, LC_NUMERIC
 setlocale(LC_NUMERIC, 'C')
 from collections import deque
+import json
 
 doc=None
 
@@ -47,17 +50,6 @@ def fmt2array(a):
         x=re.match(r'^([^`]*)`([^`]*)`(.*)$',st)
     r.append(store+st)
     return r
-def formatObjects(a,objlist,toFloat=False):
-    fmt=fmt2array(a)
-    res=[str(fmt[0])]*len(objlist)
-    for i in range(0,len(fmt)//2):
-        for j in range(0,len(objlist)):
-            m=getattr(objlist[j],fmt[2*i+1])
-            res[j]+=str(m())
-            res[j]+=fmt[2*i+2]
-    if toFloat:
-        return([float(x) for x in res])
-    return(res)
 
 def LaTeXEscape(a):
     """
@@ -70,10 +62,9 @@ def LaTeXEscape(a):
         for x in a:
             b.append(latexre.sub(lambda match: latexconv[match.group()], x))
         return b
-    elif isinstance(a,str):
-        return latexre.sub(lambda match: latexconv[match.group()], a)
     else:
-        return a
+        res=latexre.sub(lambda match: latexconv[match.group()], str(a))
+        return(res)
 
 def elegantjoin(ll):
     l=list(ll)
@@ -139,18 +130,7 @@ def copyAssets(inpath,out):
             shutil.copy(ffile, out)
     return c
 
-def sumCoeffs(array,**args):
-    a=0.0
-    for c in array:
-        if 'module' in args:
-            x=c.getCoeff(args['module'])
-            if x != None:
-                a+=float(x[1])
-        else:
-            a+=float(c.getCoeffs(**args)[1])
-    return(a)
-
-utils={'formatObjects':formatObjects,'semestre2year':semestre2year,'sumCoeffs': sumCoeffs}
+utils={'semestre2year':semestre2year,'year2semestre':year2semestre}
 
 class Printer:
     def __init__(self,REF,mode):
@@ -167,6 +147,8 @@ class Printer:
         self.jinja_env.filters['hours']=hours2string
         self.jinja_env.filters['hoursnum']=hours2num
         self.jinja_env.filters['merge']=merge
+    def debug(self,a):
+        print(str(a))
     def _specific(self):
         pass
     def addTemplate(self,name,subjectstring,dictionary={}):
@@ -182,7 +164,7 @@ class Printer:
         onesubject=one[1]
         oneversion=self.REF.getShortVersion()
         onedict=one[2]
-        filename=self.REF.getShortId()+'_'+onebasestripped+'_'+str(onesubject)+'_'+oneversion+self.suffix
+        filename=self.REF.id+'_'+onebasestripped+'_'+str(onesubject)+'_'+oneversion+self.suffix
         outpath=os.path.join(self.outpath,filename)
         onedict['data']=self.REF
         onedict['subject']=onesubject
@@ -234,13 +216,19 @@ class LaTeXPrinter(Printer):
             os.chdir(dirname)
             subprocess.check_call(["lualatex",texfile])
             logfile=texfile[0:-3]+'log'
-            rerun=False
-            with open(logfile) as log:
-                for x in log.readlines():
-                    if x[0:47]=='LaTeX Warning: Label(s) may have changed. Rerun':
-                        rerun=True
-            if (rerun):
-                subprocess.check_call(["lualatex",texfile])
+            rerun=True
+            loopprotection=0
+            while(rerun):
+                loopprotection+=1
+                rerun=False
+                with open(logfile) as log:
+                    for x in log.readlines():
+                        if x[0:47]=='LaTeX Warning: Label(s) may have changed. Rerun':
+                            rerun=True
+                if (rerun):
+                    subprocess.check_call(["lualatex",texfile])
+                if loopprotection>4:
+                    rerun=False
             os.chdir(wd)
 class HTMLPrinter(Printer):
     def _specific(self):
@@ -249,881 +237,716 @@ class HTMLPrinter(Printer):
 	    trim_blocks = True,
 	    loader = jinja2.FileSystemLoader(self.path)
         )
+class JSONPrinter(Printer):
+    def _specific(self):
+        self.suffix='.json'
+        self.jinja_env = jinja2.Environment(
+	    trim_blocks = True,
+	    autoescape = False,
+	    loader = jinja2.FileSystemLoader(self.path)
+        )
         
 
-class DataBlob:
-    _blob="DataBlob"
-    def __init__(self,id: str):
-        self.data={}
-        self.print={}
+class DataError(Exception):
+    def __init__(self,message):
+        self.message=message
+class CatalogError(Exception):
+    def __init__(self,message):
+        self.message=message
+
+
+class SmartObject:
+    class_props=[]
+    class_arrayprops=[]
+    class_subs=[]
+    class_fkeys=[]
+    class_singlefkey=[]
+    def __init__(self,id,d,backref=None,namespace=None):
+        self.namespace=namespace
+        self.parent=backref
+        self.backref=[backref]
         self.id=id
-    def __str__(self):
-        return '<Object '+type(self)._blob+' '+str(self.id)+'>'
-    def getId(self):
-        return self.id
-    def getShortId(self):
-        return re.sub(r'[- ._]','',self.id)
+        namespace.addObject(id,self)
+        for i in self.class_props:
+            if i in d:
+                setattr(self,i,d[i])
+            else:
+                setattr(self,i,'')
+        for i in self.class_arrayprops:
+            if i in d:
+                setattr(self,i,d[i])
+            else:
+                setattr(self,i,[])
+        for i in self.class_subs:
+            if i in d:
+                func=getattr(self,'_add_'+i)
+                e={}
+                for j in d[i]:
+                    e[j]=func(j,d[i][j],backref=self,namespace=namespace)
+                setattr(self,i,e)
+            else:
+                setattr(self,i,{})
+        for i in self.class_fkeys:
+            if i in d:
+                setattr(self,i+'_fkey',d[i])
+            else:
+                setattr(self,i+'_fkey',[])
+        for i in self.class_singlefkey:
+            if i in d:
+                setattr(self,i+'_fkey',d[i])
+            else:
+                setattr(self,i+'_fkey',None)
+        for i in self.class_fkeys+self.class_singlefkey:
+            namespace.dereferenceForeignKeys(self,i)
+        a=set(self.class_props+self.class_arrayprops+self.class_subs+self.class_fkeys+self.class_singlefkey+['id'])
+        forgotten=[]
+        for i in d:
+            if i not in a:
+                forgotten.append(i)
+        if len(forgotten):
+            print('Keys {} ignored in {}'.format(', '.join(forgotten),str(type(self))))
     def isPlural(self):
         return 1
-    def addInfo(self,infotype: str,infovalue):
-        if infotype not in self.data:
-            self.data[infotype]=[infovalue]
-        else:
-            self.data[infotype].append(infovalue)
-    def _getData(self,k: str,idx=None,fail=False):
-        if k not in self.data:
-            if fail:
-                raise Exception('Key '+k+' not found in '+str(self))
+    def getName(self):
+        if hasattr(self,'name'):
+            return self.name
+        if hasattr(self,'shortname'):
+            return self.shortname
+        return self.id
+    def getShortname(self):
+        if hasattr(self,'shortname'):
+            return self.shortname
+        if hasattr(self,'name'):
+            return self.name
+        return self.id
+    def toJson(self):
+        d={'id':self.id}
+        for i in self.class_props+self.class_arrayprops:
+            if hasattr(self,i):
+                d[i]=getattr(self,i)
+        for i in self.class_subs:
+            if hasattr(self,i):
+                e={}
+                f=getattr(self,i)
+                for j in f:
+                    e[f[j].id]=f[j].toJson()
+                d[i]=e
+        for i in self.class_fkeys:
+            if hasattr(self,i):
+                e=[]
+                f=getattr(self,i)
+                for j in f:
+                    e.append(f[j].id)
+                d[i]=e
+        for i in self.class_singlefkey:
+            if hasattr(self,i):
+                f=getattr(self,i)
+                d[i]=f.id
+        return(d)
+    def __str__(self):
+        s='<Object '+str(type(self))+' '+str(self.id)+'>\n'
+        d=self.toJson()
+        dd=[]
+        for k in sorted(d.keys()):
+            if k!='id':
+                if type(d[k])==str:
+                    dd.append('  {}: "{}"'.format(k,d[k]))
+                elif type(d[k])==type([]):
+                    dd.append('  {}: [{} elts]'.format(k,len(d[k])))
+                else:
+                    dd.append('  {}: dict({} elts)'.format(k,len(d[k])))
+        s+=',\n'.join(dd)
+        return(s)
+    def addBackref(self,object):
+        self.backref.append(object)
+
+
+class Catalog:
+    def __init__(self,*pargs,**args):
+        self.catalog={}
+        self.fkeys=[]
+        super().__init__(*pargs,**args)
+    def addObject(self,id,object):
+       if id in self.catalog:
+           raise CatalogError('{} already exists in catalog'.format(id))
+       self.catalog[id]=object
+    def getObject(self,id):
+        if id in self.catalog:
+            return self.catalog[id]
+        raise CatalogError('{} is not in catalog'.format(id))
+
+    def dereferenceForeignKeys(self,object,key):
+        self.fkeys.append((object,key))
+    def dereferenceAll(self):
+        while len(self.fkeys)>0:
+            (object,key)=self.fkeys.pop()
+            d={}
+            l=getattr(object,key+'_fkey')
+            if isinstance(l,str):
+                try:
+                    y=self.getObject(l)
+                except(CatalogError):
+                    raise CatalogError('Wrong dereference for key {} in field {} of object {}'.format(l,key,object.id))
+                y.addBackref(object)
+                d=y
             else:
-                return []
-        if idx==None:
-            return self.data[k]
-        if int(idx)<0 or int(idx)>=len(self.data[k]):
-            if fail:
-                raise Exception('Key '+str(int(idx))+' out of range '+str(self)+'['+k+']')
-            else:
-                return None
-        else:
-            return self.data[k][int(idx)]
+                for x in l:
+                    try:
+                        y=self.getObject(x)
+                    except(CatalogError):
+                        raise CatalogError('Wrong dereference for key {} in field {} of object {}'.format(x,key,object.id))
+                    d[x]=y
+                y.addBackref(object)
+            setattr(object,key,d)
 
-class DataBlobAsDict(DataBlob):
-    def addInfo(self,infotype: str,infokey: str,infovalue):
-        if infotype not in self.data:
-            self.data[infotype]={infokey:infovalue}
-        else:
-            self.data[infotype][infokey]=infovalue
-    def _getData(self,k: str,idx=None,fail=False):
-        if k not in self.data:
-            if fail:
-                raise Exception('Key '+k+' not found in '+str(self))
-            else:
-                return {}
-        if idx==None:
-            return self.data[k]
-        if idx not in self.data[k]:
-            if fail:
-                raise Exception('Key '+idx+' not found in '+str(self)+'['+k+']')
-            else:
-                return None
-        return self.data[k][idx]
-
-
-class Comp(DataBlobAsDict):
-    _blob='Comp'
-    def __init__(self,id: str):
-        super().__init__(id)
-        self.ac=[]
-        self.coeffs={}
-    def getNum(self):
-        try:
-            return self._getData('numero',idx='code',fail=True)
-        except Exception:
-            return '?'
-    def getShorttxt(self):
-        if 'activite' in self.data:
-            if 'activiteshort' in self.data['activite']: 
-                return self.data['activite']['activiteshort']
-            elif 'activite' in self.data['activite']:
-                return self.data['activite']['activite']
-        return '[?'+self.id+'?]'
-    def getLongtxt(self):
-        if 'activite' in self.data:
-            if 'activite' in self.data['activite']: 
-                return self.data['activite']['activite']
-            elif 'activiteshort' in self.data['activite']:
-                return self.data['activite']['activiteshort']
-        return '[?'+self.id+'?]'
-    def addAC(self,ac):
-        self.ac.append(ac)
-    def getDescriptionList(self):
-        try:
-            dictionary=self._getData('comptxt',fail=True)
-            return [dictionary[x] for key in sorted(dictionary.keys())]
-        except Exception:
-            return '(pas de description disponible)'
-    def getNiveauDict(self,year: int):
-        if year>0 and year<4:
-            return self._getData('niveau'+str(year),fail=True)
-        raise Exception('Year {} is out of range'.format(year))
-    def getNiveau(self,year: int ,k: str):
-        if year>0 and year<4:
-            return self._getData('niveau'+str(year),idx=k,fail=True)
-        raise Exception('Year {} is out of range'.format(year))
-    
-    def getACObjects(self,semestre=None,year=None):
-        if semestre==None and year==None:
-            return self.ac
-        a=[]
-        if semestre != None:
-            year=semestre2year(semestre)
-        for ac in self.ac:
-            if int(ac.getLevel())==year:
-                a.append(ac)
-        return a
-class NormalComp(Comp):
-    def _isNormal(self):
-        return True
-    def addCoeff(self,moduleobj,value):
-        self.coeffs[moduleobj.getId()]=(moduleobj,value)
-    def getCoeff(self,moduleobj):
-        if moduleobj.getId() in self.coeffs:
-            return self.coeffs[moduleobj.getId()]
-        return None
-    def getCoeffs(self,semestre=None,onlyType=None):
-        if 'RESS' in onlyType:
-            ressources=True
-        else:
-            ressources=False
-        if 'SAE' in onlyType:
-            sae=True
-        else:
-            sae=False
-        if 'PORTFOLIO' in onlyType:
-            portfolio=True
-        else:
-            portfolio=False
-        a=0
-        b=[]
-        for i in self.coeffs:
-            module=self.coeffs[i][0]
-            value=self.coeffs[i][1]
-            if semestre!=None and semestre not in module.getSemestreList():
-                continue
-            if module.subtype()==Module.SUBTYPE_RESS and ressources:
-                a+=int(value)
-                b.append(module)
-            if module.subtype()==Module.SUBTYPE_SAE and sae:
-                a+=int(value)
-                b.append(module)
-            if module.subtype()==Module.SUBTYPE_PORTFOLIO and portfolio:
-                a+=int(value)
-                b.append(module)
-        return (b,a)
-class TransversalComp(Comp):
-    def __init__(self):
-        super().__init__('TRANSVERSAL')
-        self.data['numero']={'code': '*'}
-    def isPlural(self):
-        return 2
-    def getLongtxt(self):
-        return 'Toutes les compétences'
-    def getShorttxt(self):
-        return 'Transversal'
-    def getNiveauDict(self,year: int):
-        if year>0 and year<4:
-            return {'niveau'+str(year):''}
-        raise Exception('Year {} is out of range'.format(year))
-
-
-class AC(DataBlob):
-    def __init__(self,id: str,comp: Comp):
-        self.id=id
-        self.compref=comp
-        self.txt=None
-        self.level=None
-        comp.addAC(self)
-        self.data={}
-    def addInfo(self,code,value):
-        if (code=='ac'):
-            self.txt=value
-            self.short=re.sub(r" *\([^)]*\)", "", value)
-        elif (code=='acnum'):
-            self.num=value
-        elif (code=='aclevel'):
-            self.level=value
-        else:
-            # Unknown code, forward compatibility
-            self.data[code]=value
-    def getLongtxt(self):
-        return self.short
-    def getShorttxt(self):
-        return self.short
-    def getCompId(self):
-        return self.compref.getId()
-    def getCompNum(self):
-        return self.compref.getNum()
-    def getCompObject(self):
-        return self.compref
-    def getLevel(self):
-        return self.level
-    def getNum(self):
-        return self.num
-    def getShortonly(self):
-        return self.short
-class TransversalAC(AC):
-    def __init__(self,comp):
-        super().__init__('TRANSVERSAL',comp)
-        self.addInfo('acnum',0)
-        self.addInfo('ac','Tous les apprentissages critiques (enseignement transversal)')
-    def isPlural(self):
-        return 2
-    def getLongtxt(self,level=False):
-        return 'Tous les apprentissages critiques (enseignement transversal)'
-    def getShorttxt(self,level=False):
-        return 'Tous les apprentissages critiques'
-
-
-class Referentiel:
-    def debug(self,a):
-        print(str(a))
-    def __init__(self,name: str=None,shortname=None):
-        self.name=name
-        self.shortname=name
-        if shortname != None:
-            self.shortname=name
-        self.version=''
-        self.COMP={}
-        self.PARCOURS={}
-        self.SAE={}
-        self.RESS={}
-        self.AC={}
-        self.PORTFOLIO={}
-        self.HOURS={}
-        self.COMP['TRANSVERSAL']=TransversalComp()
-        self.AC['TRANSVERSAL']=TransversalAC(self.COMP['TRANSVERSAL'])
-        self.introduction={}
-        self.introductionparcours={}
-        self.introductionparcoursref={}
-        self.printer=[]
-        self.PORTFOLIOCODES=[]
-    def addTroncCommun(self,id: str):
-        self.PARCOURS[id]=ParcoursCommun(id,self.PARCOURS)
-    def getId(self):
-        return self.name
-    def getShortId(self):
-        return re.sub(r'[^a-zA-Z0-9]','',self.shortname)
-    def getVersion(self):
-        return self.version
+        
+class Referentiel(Catalog,SmartObject):
+    class_props=['version','author','authorshort','name','number','url']
+    class_arrayprops=['introtxt']
+    class_subs=['comp','multicomp','parcours','multiparcours','ress','sae','portfolio','source','hours']
+    def __init__(self,id,d,backref=None):
+        super().__init__(id,d,backref=backref,namespace=self)
+        if 'version' not in d or d['version']=='':
+            today=datetime.date.today()
+            self.version=today.strftime('V%Y%m%d')
+    def _add_comp(self,id,d,backref=None,namespace=None):
+        return Competence(id,d,backref=backref,namespace=namespace)
+    def _add_multicomp(self,id,d,backref=None,namespace=None):
+        return CompositeCompetence(id,d,backref=backref,namespace=namespace)
+    def _add_parcours(self,id,d,backref=None,namespace=None):
+        return Parcours(id,d,backref=backref,namespace=namespace)
+    def _add_multiparcours(self,id,d,backref=None,namespace=None):
+        return CompositeParcours(id,d,backref=backref,namespace=namespace)
+    def _add_ress(self,id,d,backref=None,namespace=None):
+        return Ressource(id,d,backref=backref,namespace=namespace)
+    def _add_sae(self,id,d,backref=None,namespace=None):
+        return SAE(id,d,backref=backref,namespace=namespace)
+    def _add_portfolio(self,id,d,backref=None,namespace=None):
+        return Portfolio(id,d,backref=backref,namespace=namespace)
+    def _add_source(self,id,d,backref=None,namespace=None):
+        return Source(id,d,backref=backref,namespace=namespace)
+    def _add_hours(self,id,d,backref=None,namespace=None):
+        return Hours(id,d,backref=backref,namespace=namespace)
     def getShortVersion(self):
-        x=re.match(r'^([.A-Za-z0-9]*).*$',self.version)
+        x=re.match(r'^([-_.A-Za-z0-9]*).*$',self.version)
         if x:
             return x.group(1)
         else:
             return self.version
-    def getNumber(self):
-        return self.number
-    def getHoursBlock(self,k,fail=False):
-        if k not in self.HOURS:
-            if fail:
-                raise Exception('Source {} not found'.format(k))
-            self.HOURS[k]=Source(k)
-        return self.HOURS[k]
-    def getHoursBlockList(self):
-        return self.HOURS.values()
-    def getComp(self,k,fail=False):
-        if k not in self.COMP:
-            if fail:
-                raise Exception('Comp {} not found'.format(k))
-            self.COMP[k]=NormalComp(k)
-        return self.COMP[k]
-    def getNormalCompList(self):
-        a=[]
-        for x in self.COMP:
-            if isinstance(self.COMP[x],NormalComp):
-                a.append(self.COMP[x])
-        return(a)
+    def getParcours(self,bin=None):
+        all=(self.parcours|self.multiparcours).values()
+        if bin==None:
+            return ParcoursSet(all)
+        a=set()
+        for x in bin:
+            found=False
+            for y in all:
+                if y.getBin()==x:
+                    a.add(y)
+                    found=True
+            if not found:
+                for xx in x:
+                    found=False
+                    for y in self.parcours.values():
+                        if y.getBin()==xx:
+                            a.add(y)
+                            found=True
+                    if not found:
+                        raise CatalogError('Bad bin')
+        return ParcoursSet(a)
 
-    def getSAE(self,k,fail=False):
-        if k not in self.SAE:
-            if fail:
-                raise Exception('SAE {} not found'.format(k))
-            self.SAE[k]=SAE(k)
-        return self.SAE[k]
-    def getPortfolio(self,k,fail=False):
-        if k not in self.PORTFOLIO:
-            if fail:
-                raise Exception('Portfolio {} not found'.format(k))
-            self.PORTFOLIO[k]=Portfolio(k)
-        return self.PORTFOLIO[k]
-    def getAC(self,k,comp=None,fail=False):
-        if k not in self.AC:
-            if fail or comp==None:
-                raise Exception('Unknown AC ({})'.format(k))
-            else:
-                compObject=self.getComp(comp,fail)
-                self.AC[k]=AC(k,compObject)
-        return self.AC[k]
-    def getACList(self):
-        return self.AC.values()
-    def getRessource(self,k,fail=False):
-        if k not in self.RESS:
-            if fail:
-                raise Exception('Ressource {} not found'.format(k))
-            self.RESS[k]=Ressource(k)
-        return self.RESS[k]
-    def getModuleObjects(self,onlyType=None,semestre=None,year=None,parcours=None,interparcours=None):
-        r=set()
-        all=set(self.RESS.values())|set(self.SAE.values())|set(self.PORTFOLIO.values())
+    def getSemestre(self):
+        return sorted({m.sem for m in self.getModule()})
+    def getYear(self):
+        return sorted({semestre2year(m.sem) for m in self.getModule()})
+
+    def getModule(self,onlyType=None,semestre=None,year=None,parcours=None,interparcours=None,bin=None):
         if onlyType==None:
-            r=all
+            modules=self.sae|self.ress|self.portfolio
         else:
-            for t in onlyType:
-                if t=='SAE':
-                    r=r.union(self.SAE.values())
-                if t=='RESS':
-                    r=r.union(self.RESS.values())
-                if t=='PORTFOLIO':
-                    r=r.union(self.PORTFOLIO.values())
+            modules={}
+            if 'SAE' in onlyType:
+                modules=modules|self.sae
+            if 'RESS' in onlyType:
+                modules=modules|self.ress
+            if 'PORTFOLIO' in onlyType:
+                modules=modules|self.portfolio
+        modules=set(modules.values())
+        sems=set()
         if year!=None or semestre!=None:
-            sems=[]
             if year!=None:
-                sems=year2semestre(year)
+                sems=set(year2semestre(year))
             elif semestre!=None:
-                sems=[semestre]
-            filtered=set()
-            for sem in sems:
-                filtered=filtered|{x for x in r if sem in x.getSemestreList()}
-            r=filtered
+                sems={semestre}
+        if len(sems):
+            modules={x for x in modules if len({x.sem}&sems)}
         if parcours!=None or interparcours!=None:
             parc=set()
-            if interparcours!=None:
-                parc={x for x in self.PARCOURS.values() if interparcours.intersects(x)}
             if parcours!=None:
                 parc={parcours}
+            else:
+                parc={x for x in self.getParcours() if interparcours.intersects(x)}
             filtered=set()
             for p in parc:
-                filtered=filtered|{x for x in r if p in x.getParcoursObjects()}
-            r=filtered
-        return list(sorted(r,key=lambda x:(("0" if x in self.SAE else "1")+x.getId())))
-    def getRessourceObjects(self,**args):
-        return self.getModuleObjects(onlyType=['RESS'],**args)
-    def getSAEObjects(self,**args):
-        return self.getModuleObjects(onlyType=['SAE'],**args)
-    def getPortfolioObjects(self,**args):
-        return self.getModuleObjects(onlyType=['PORTFOLIO'],**args)
-    def getParcours(self,k,fail=False):
-        if k not in self.PARCOURS:
-            if fail:
-                raise Exception('Parcours {} not found'.format(k))
-            self.PARCOURS[k]=Parcours(k)
-        return self.PARCOURS[k]
-    def getParcoursObjects(self,all=False,semestre=None,year=None,forceNormal=False,parcours=None,interparcours=None):
-        if all:
-            if forceNormal:
-                return sorted([x for x in self.PARCOURS.values() if x.isNormal()],key=lambda x:x.getId())
-            else:
-                return sorted(self.PARCOURS.values(),key=lambda x:x.getId())
-        sm=self.getModuleObjects(semestre=semestre,year=year,parcours=parcours,interparcours=interparcours)
-        parc=set()
-        for m in sm:
-            parc=parc|set(m.getParcoursObjects())
-        if forceNormal:
-            parcn=set([x for x in parc if x.isNormal()])
-            for p in [x for x in parc if not x.isNormal()]:
-                parcn=parcn|p.getExpandedSet()
-            parc=parcn
-        return sorted(list(parc),key=lambda x:((str(x.isPlural()+1) if x.isNormal() else '9')+x.getId()))
-            
-    def updateObjects(self):
-        for r in self.RESS.values():
-            for a in r.getACList():
-                r.addInfo('acobject',self.getAC(a,fail=True))
-            for a in r.getParcoursList():
-                r.addInfo('parcoursobject',self.getParcours(a,fail=True))
-            for a in r.getPrerequisList():
-                r.addInfo('prerequisobject',self.getRessource(a,fail=True))
-        for s in self.SAE.values():
-            for a in s.getACList():
-                s.addInfo('acobject',self.getAC(a,fail=True))
-            for a in s.getParcoursList():
-                s.addInfo('parcoursobject',self.getParcours(a,fail=True))
-            for a in s.getCompList():
-                s.addInfo('cibleobject',self.getComp(a,fail=True))
-            for a in s.getRessourceList():
-                s.addInfo('ressobject',self.getRessource(a,fail=True))
-        for s in self.PORTFOLIO.values():
-            for a in r.getACList():
-                s.addInfo('acobject',self.getAC(a,fail=True))
-            for a in r.getParcoursList():
-                s.addInfo('parcoursobject',self.getParcours(a,fail=True))
-            for a in s.getRessourceList():
-                s.addInfo('ressobject',self.getRessource(a,fail=True))
-    def getSemestres(self,year=None):
-        sems={}
-        for r in []+list(self.getRessourceObjects())+list(self.getSAEObjects()):
-            semestres=r.getSemestreList()
-            for s in semestres:
-                if year==None or int(semestre2year(s))==int(year):
-                    sems[s]=1
-        return list(sems.keys())
-    def getYears(self):
-        sems={}
-        for r in []+list(self.getRessourceObjects())+list(self.getSAEObjects()):
-            semestres=r.getSemestreList()
-            for s in semestres:
-                sems[semestre2year(s)]=1
-        return list(sems.keys())
-    def getPossibleCompObjects(self,parcoursList,year):
-        nivset=set()
-        for p in parcoursList:
-            nivset=nivset.union(set(p.getComps(year)))
-        niveaux=sorted(list(nivset))
-        out=[]
-        for n in niveaux:
-            for c in self.getNormalCompList():
-                if n in c.getNiveauDict(year):
-                    out.append(c)
-        return out
-    def sumIn(self,moduleList,infotype=None):
-        a=0.0
-        for mm in moduleList:
-            m=mm
-            if isinstance(mm,DataBlob):
-                m=mm.getId()
-            if m in self.HOURS:
-                msource=self.HOURS[m]
-                a+=msource.sumIn(infotype=infotype)
-        return a
+                filtered=filtered|{x for x in modules if p in x.getParcours()}
+            modules=filtered
+        if bin!=None:
+            modules={x for x in modules if x.getParcoursBin()==bin}
+        return ModuleList(sorted(modules,key=lambda x:x.moduleType()+x.id))
 
-    def sumOut(self,moduleList,infotype=None):
-        a=0.0
-        for mm in moduleList:
-            m=mm
-            if isinstance(mm,DataBlob):
-                m=mm.getId()
-            if m in self.HOURS:
-                msource=self.HOURS[m]
-                a+=msource.sumOut(infotype=infotype)
-        return a
-
-    def addCoeff(self,moduleid,compid,value):
-        if compid not in self.COMP:
-            raise Exception('Coefficient with bad CompId {}'.format(compid))
-        comp=self.COMP[compid]
-        module=None
-        if moduleid not in self.RESS and moduleid not in self.SAE and moduleid not in self.PORTFOLIO:
-            raise Exception('Coefficient with bad ModuleId {}'.format(moduleid))
-        elif moduleid in self.SAE:
-            module=self.SAE[moduleid]
-        elif moduleid in self.PORTFOLIO:
-            module=self.PORTFOLIO[moduleid]
+    def getHours(self,onlyType=None,source=None,destination=None):
+        if not hasattr(source, '__iter__') and source!=None:
+            source={source.id}
+        elif source==None:
+            source=set()
         else:
-            module=self.RESS[moduleid]
-        module.addCoeff(comp,value)
-        comp.addCoeff(module,value)
+            source={x.id for x in source}
+        if not hasattr(destination, '__iter__') and destination!=None:
+            destination={destination.id}
+        elif destination==None:
+            destination=set()
+        else:
+            destination={x.id for x in destination}
+        a=set()
+        for i in self.hours.values():
+            s=i.source.id
+            d=i.destination.id
+            if s in source or len(source)==0:
+                if d in destination or len(destination)==0:
+                    if onlyType==None or i.type in onlyType:
+                        a.add(i)
+        return HoursSet(a)
 
-    def getIntroductionList(self):
-        a=[]
-        for x in sorted(self.introduction.keys()):
-            a.append(self.introduction[x])
-        return a
-    def getIntroductionParcours(self):
-        a=[]
-        for p in sorted(self.introduction.keys()):
-            b=[self.introductionparcours[p],self.PARCOURS[self.introductionparcoursref[p]]]
-            a.append(b)
-        return a
-            
-    def getParcoursCanonical(self,plist,lower=True):
-        pris=set()
-        liste=plist
-        if isinstance(plist,Parcours):
-            liste=[plist]
-        if len(liste)==1:
-            return liste[0].getCanonical(lower)
-        for p in liste:
-            pris=pris|p.getExpandedSet()
-        for p in self.PARCOURS.values():
-            expansion=p.getExpandedSet()
-            if len(pris&expansion)==len(pris) and len(pris)==len(expansion):
-                return p.getCanonical(lower)
+        
+class Competence(SmartObject):
+    class_props=['name','number','shortname']
+    class_arrayprops=['component','context','description']
+    class_subs=['subcomp']
+    def _add_subcomp(self,id,d,backref=None,namespace=None):
+        return NiveauCompetence(id,d,backref=backref,namespace=namespace)
+class CompositeCompetence(SmartObject):
+    class_props=['name','number','shortname']
+    class_subs=['subcomp']
+    class_fkeys=['indirect']
+    def _add_subcomp(self,id,d,backref=None,namespace=None):
+        return NiveauCompetence(id,d,backref=backref,namespace=namespace)
+    
+
+class NiveauCompetence(SmartObject):
+    class_props=['name','level']
+    class_subs=['ac','ue','multiac']
+    def _add_ac(self,id,d,backref=None,namespace=None):
+        return ApprentissageCritique(id,d,backref=backref,namespace=namespace)
+    def _add_ue(self,id,d,backref=None,namespace=None):
+        return UE(id,d,backref=backref,namespace=namespace)
+    def _add_multiac(self,id,d,backref=None,namespace=None):
+        return CompositeApprentissageCritique(id,d,backref=backref,namespace=namespace)
+    def getUE(self,semestre=None):
+        if semestre==None:
+            return self.ue
+        for u in self.ue.values():
+            if u.sem==semestre:
+                return u
+        return None
+
+
+class ApprentissageCritique(SmartObject):
+    class_props=['name','num','shortname']
+
+class CompositeApprentissageCritique(SmartObject):
+    class_props=['name','num','shortname']
+
+
+class UE(SmartObject):
+    class_props=['sem','ects']
+    class_fkeys=['parcours']
+    def getCoeff(self,module=None):
+        if module==None:
+            return CoefficientSet({x for x in self.backref if isinstance(x,Coefficient)})
+        else:
+            return CoefficientSet({x for x in self.backref if isinstance(x,Coefficient) and x.parent in module})
+
+class Parcours(SmartObject):
+    class_props=['letter','name','shortname']
+    class_arrayprops=['introtxt','job','jobsecondary','jobsenior']
+    class_fkeys=['subcomp']
+    def intersects(self,p):
+        if self in p.getExpandedSet():
+            return True
+        return False
+    def getExpandedSet(self):
+        return ParcoursSet({self})
+    def getCanonical(self,lower=True):
+        return ('p' if lower else 'P')+'arcours '+self.letter
+    def getCompLevel(self,year=None):
+        if year==None:
+            sc=set(self.subcomp.values())
+        else:
+            y=str(year)
+            sc={x for x in self.subcomp.values() if x.level==y}
+        return sc        
+    def getBin(self):
+        return self.letter
+
+class CompositeParcours(SmartObject):
+    class_props=['letter','name','shortname']
+    class_fkeys=['indirect']
+    def intersects(self,p):
+        a=self.getExpandedSet()
+        if len(a&p.getExpandedSet())>0:
+            return True
+        return False
+    def getExpandedSet(self):
+        s=set()
+        for x in self.indirect.values():
+            s=s|x.getExpandedSet()
+        return ParcoursSet(s)
+
+    def getCanonical(self,lower=True):
         if lower:
-            s='parcours '
-        else:
-            s='Parcours '
-        s+=elegantjoin(sorted([x.getLettreList()[0] for x in pris]))
-        return(s)
-        
-class Source:
-    def __init__(self,id):
-        self.data={'in':{},'out':{}}
-        self.id=id
-    def __str__(self):
-        return '<Object Source '+self.id+'>'
-    def addHoursIn(self,infotype,source,info_value):
-        if infotype not in self.data['in']:
-            self.data['in'][infotype]={}
-        if source not in self.data['in'][infotype]:
-            self.data['in'][infotype][source]=0
-            self.data['in'][infotype][source]+=info_value
-    def addHoursOut(self,infotype,destination,info_value):
-        if infotype not in self.data['out']:
-            self.data['out'][infotype]={}
-        if destination not in self.data['out'][infotype]:
-            self.data['out'][infotype][destination]=0
-            self.data['out'][infotype][destination]+=info_value
-    def sumOut(self,infotype=None,destination=None):
-        return self._sumFilter(self.data['out'],infotype,destination)
-    def listOut(self,infotype=None,destination=None):
-        return self._listFilter(self.data['out'],infotype,destination)
-    def sumIn(self,infotype=None,source=None):
-        return self._sumFilter(self.data['in'],infotype,source)
-    def listIn(self,infotype=None,source=None):
-        return self._listFilter(self.data['in'],infotype,source)
-    def _listFilter(self,data,infotype,partner):
-        r={}
-        for xtype in data:
-            if infotype != None and xtype not in infotype:
-                continue
-            for xpartner in data[xtype]:
-                if partner != None and xpartner not in partner:
-                    continue
-                if data[xtype][xpartner]>0:
-                    r[xpartner]=1
-        return(list(r.keys()))
-    def _sumFilter(self,data,infotype,partner):
-        r=0.0
-        for xtype in data:
-            if infotype != None and xtype not in infotype:
-                continue
-            for xpartner in data[xtype]:
-                if partner != None and xpartner not in partner:
-                    continue
-                r += data[xtype][xpartner]
-        return(r)
+            return self.letter[0].lower()+self.letter[1:]
+        return self.letter[0].upper()+self.letter[1:]
+    def isPlural(self):
+        return 2
+    def getCompLevel(self,year=None):
+        a=None
+        for t in self.indirect.values():
+            b=t.getCompLevel(year=year)
+            if a==None:
+                a=b
+            else:
+                a=a&b
+        return a
 
-
-class Module(DataBlob):
-    _blob='Module'
-    SUBTYPE_SAE='SAE'
-    SUBTYPE_RESS='RESS'
-    SUBTYPE_PORTFOLIO='PORTFOLIO'
-    def __init__(self,id):
-        super().__init__(id)
-        self.coeffs=[]
-    def getShorttxt(self):
-        txt='???'
-        if 'shortname' in self.data:
-            txt=self.data['shortname'][0]
-        elif 'longname' in self.data:
-            txt=self.data['longname'][0]
-        return txt
-    def getLongtxt(self):
-        txt='???'
-        if 'longname' in self.data:
-            txt=self.data['longname'][0]
-        elif 'shortname' in self.data:
-            txt=self.data['shortname'][0]
-        return txt
-    def getSemestreList(self):
-        return self._getData('semestre')
-    def getParcoursList(self):
-        return self._getData('parcours')
-    def getParcoursObjects(self):
-        return self._getData('parcoursobject')
-    def getACList(self):
-        return self._getData('ac')
-    def getACObjects(self,comp=None):
+    def getBin(self):
+        return ''.join(sorted([x.letter for x in self.indirect.values()]))
+                            
+class ParcoursSet(set):
+    def getCanonical(self,lower=True):
+        t=set()
+        for p in self:
+            t=t|p.getExpandedSet()
+        if len(t)==0:
+            return 'hors parcours'
+        for i in self:
+            namespace=i.namespace
+            break
+        for p in namespace.getParcours():
+            pp=p.getExpandedSet()
+            if len(t&pp)==len(t) and len(t)==len(pp):
+                return p.getCanonical()
+        s='parcours ' if lower else 'Parcours '
+        s+=elegantjoin(sorted([x.letter for x in t]))
+        return s
+    def getCompLevel(self,year=None):
+        a=set()
+        for t in self:
+            a=a|t.getCompLevel(year=year)
+        return a
+    def getExpandedSet(self):
+        a=set()
+        for x in self:
+            a=a|x.getExpandedSet()
+        return ParcoursSet(a)
+            
+    def isPlural(self):
+        if len(self)>1:
+            return 2
+        for x in self:
+            return x.isPlural()
+        return 1
+class Module(SmartObject):
+    def _add_coeff(self,id,d,backref=None,namespace=None):
+        return Coefficient(id,d,backref=backref,namespace=namespace)
+    def getParcours(self):
+        return ParcoursSet(self.parcours.values())
+    def getParcoursBin(self):
+        a=set()
+        for p in self.parcours.values():
+            b=[x.letter for x in p.getExpandedSet()]
+            a=a|set(b)
+        return ''.join(sorted(list(b)))
+    def getAC(self,subcomp=None):
+        a=set(self.ac.values())
+        if subcomp==None:
+            return a
+        b=set()
+        for x in a:
+            if x.parent==subcomp:
+                b.add(x)
+        return(b)
+    def getCoeff(self,comp=None):
         if comp==None:
-            return sorted(self._getData('acobject'),key=lambda x:x.getNum())
-        cid=comp.getId()
-        return sorted([x for x in self._getData('acobject') if x.getCompId()==cid],key=lambda x:x.getNum())
-    def getDescriptionList(self):
-        return self._getData('desc')
-    def addCoeff(self,compobj,value):
-        self.coeffs.append((compobj,value))
-        
+            return CoefficientSet(self.coeff.values())
+        a=set()
+        for c in self.coeff.values():
+            u=c.ue
+            # UE => NiveauCompetence => Competence
+            if u.parent.parent==comp:
+                a.add(c)
+        return CoefficientSet(a)
+    def getUE(self,comp=None):
+        return {x.ue for x in self.getCoeff(comp=comp)}
+    def getNiveauCompetence(self,comp=None):
+        u=self.getUE(comp=comp)
+        b=set()
+        for x in u:
+            b.add(x.parent)
+        ac=self.ac.values()
+        for x in ac:
+            b.add(x.parent)
+        return b
 
-class SAE(Module):
-    _blob='SAE'
-    def __init__(self,id):
-        super().__init__(id)
-        self.exemple={}
-        # Specific to SAE : Comp, Preco, Ressource, Livrable, Exemples
-    def subtype(self):
-        return Module.SUBTYPE_SAE
-    def getCompList(self):
-        return self._getData('cible')
-    def getCompObjects(self):
-        return self._getData('cibleobject')
-    def getPrecoList(self):
-        return self._getData('preco')
-    def getRessourceList(self):
-        return self._getData('ress')
-    def getRessourceObjects(self):
-        return self._getData('ressobject')
-    def getLivrableList(self):
-        return self._getData('livrable')
-    def getExemple(self,order):
-        if order not in self.exemple:
-            self.exemple[order]=ExempleSAE(self.id,order)
-        return self.exemple[order]
-    def getExemples(self):
-        r=list(self.exemple.keys())
-        r.sort()
-        return r
-    def getExempleObjects(self):
-        r=list(self.exemple.keys())
-        r.sort()
-        return [self.exemple[x] for x in r]
-
-class Portfolio(SAE):
-    _blob='PORTFOLIO'
-    def subtype(self):
-        return Module.SUBTYPE_PORTFOLIO
-
-class ExempleSAE(DataBlob):
-    def __init__(self,sae_id,id):
-        super().__init__(id)
-        self.sae_id=sae_id
-    def getSynopsis(self):
-        return self._getData('synopsis')
-    def getProb(self):
-        return self._getData('prob')
-    def getForm(self):
-        return self._getData('form')
-    def getDesc(self):
-        return self._getData('form')
-    def getEval(self):
-        return self._getData('eval')
-    def getTitre(self):
-        return self._getData('titre')[0]
-
+    def getCanonical(self,lower=True):
+        return self.id+' '+self.getName()
+    def getShortCanonical(self,lower=True):
+        return self.id+' '+self.getShortname()
+class ModuleList(list):
+    def getParcoursBin(self):
+        a={}
+        for m in self:
+            b=m.getParcoursBin()
+            if b in a:
+                a[b].add(m)
+            else:
+                a[b]={m}
+        return a
+    def getParcoursBinBasic(self):
+        a=set()
+        for m in self:
+            a.add(m.getParcoursBin())
+        unbroken=False
+        while not unbroken:
+            newa={x for x in a}
+            unbroken=True
+            for x in newa:
+                if not unbroken:
+                    break
+                for y in newa:
+                    if not unbroken:
+                    	break
+                    if x==y:
+                        continue
+                    xset={e for e in x}
+                    yset={e for e in y}
+                    if xset&yset:
+                        unbroken=False
+                        a.remove(x)
+                        a.remove(y)
+                        if xset-yset:
+                            a.add(''.join(sorted(list(xset-yset))))
+                        if yset-xset:
+                            a.add(''.join(sorted(list(yset-xset))))
+                        if xset&yset:
+                            a.add(''.join(sorted(list(yset&xset))))
+        return(a)
 
 class Ressource(Module):
-    _blob="Ressource"
-    # Specific to Ressource : Prerequis, Keywords, Objectif, Savoirs
-    def subtype(self):
-        return Module.SUBTYPE_RESS
-    def getPrerequisList(self):
-        return self._getData('prerequis')
-    def getPrerequisObjects(self):
-        return sorted(self._getData('prerequisobject'),key=lambda x:x.getId())
-    def getKeywordsList(self):
-        return self._getData('keywords')
-    def getObjectifList(self):
-        return self._getData('objectif')
-    def getSavoirsList(self):
-        return self._getData('savoir')
-    def getCoeffs(self):
-        return self._getData('coeffs')
-    def getCoeffs(self):
-        return self._getData('coeffs')
-    def getDisciplineList(self):
-        d=self._getData('discipline')
-        p=self._getData('pole')
-        a=[]
-        for i in range(0,len(d)):
-            b=[d[i]]
-            if i<len(p) and p[i] and p[i]!=d[i]:
-                b.append(p[i])
-            a.append(b)
-        return a
-            
+    class_props=['keywords','name','shortname','sem']
+    class_arrayprops=['discipline','topic','description']
+    class_subs=['learning','coeff']
+    class_fkeys=['ac','parcours','prerequisite']
+    def _add_learning(self,id,d,backref=None,namespace=None):
+        return Savoir(id,d,backref=backref,namespace=namespace)
+    def moduleType(self):
+        return "2"
+    def getDiscipline(self):
+        return [[y.strip() for y in x.split(',')] for x in self.discipline]
 
+class Savoir(SmartObject):
+    class_arrayprops=['topic']
 
-class Parcours(DataBlob):
-    def getCanonical(self,lower=True):
-        if 'canonical' in self.data:
-            if lower:
-                s=self.data['canonical'][0][0].lower()
-            else:
-                s=self.data['canonical'][0][0].upper()
-            return s+self.data['canonical'][0][1:]
-        if lower:
-            s='parcours '
-        else:
-            s='Parcours '
-        return s+' '+self._getData('lettre')[0]
-    def intersects(self,p):
-        a=self.getLettreList()
-        b=p.getLettreList()
-        for x in a:
-            if x in b:
-                return True
-        return False
-    def isNormal(self):
-        return True
-    def getExpandedSet(self):
-        return {self}
-    def getLettreList(self):
-        return self._getData('lettre')
-    def getComps(self,year):
-        if year==1:
-            return self._getData('compa1')
-        elif year==2:
-            return self._getData('compa2')
-        elif year==3:
-            return self._getData('compa3')
-        raise Exception('Year {} out of range'.format(year))
+class Coefficient(SmartObject):
+    class_props=['value']
+    class_singlefkey=['ue']
+class CoefficientSet(set):
+    def sum(self):
+        a=0
+        for x in self:
+            a+=int(x.value)
+        return(a)
 
-    def getNameList(self):
-        return self._getData('nom')
-    def getShorttxt(self):
-        return 'parcours '+elegantjoin(self.getLettreList())
-class ParcoursCommun(Parcours):
-    def isPlural(self):
-        return len(self.others)
-    def isNormal(self):
-        return False
-    def getCanonical(self,lower=True):
-        if lower:
-            s=self.data['canonical'][0][0].lower()
-        else:
-            s=self.data['canonical'][0][0].upper()
-        return s+self.data['canonical'][0][1:]
-    def __init__(self,id,pdict,name="Tronc commun",canonical="tous parcours"):
-        super().__init__(id)
-        self.others=[]
-        self.data['nom']=[name]
-        self.data['canonical']=[canonical]
-        for x in pdict:
-            if pdict[x].isNormal():
-                self.others.append(pdict[x])
-    def getExpandedSet(self):
-        return set(self.others)
-    def getComps(self,year):
+class SAE(Module):
+    class_props=['guideline','name','shortname','sem']
+    class_arrayprops=['description','production']
+    class_subs=['coeff','model']
+    class_fkeys=['ac','parcours','ress','target']
+    def _add_model(self,id,d,backref=None,namespace=None):
+        return SAEModel(id,d,backref=backref,namespace=namespace)
+    def moduleType(self):
+        return "0"
+
+class SAEModel(SmartObject):
+    class_props=['name','number','format']
+    class_arrayprops=['description','evaluation','objective','synopsis']
+
+class Portfolio(Module):
+    class_props=['name','shortname','sem']
+    class_arrayprops=['description']
+    class_subs=['coeff']
+    class_fkeys=['ac','parcours','ress','target']
+    def moduleType(self):
+        return "1"
+
+class Source(SmartObject):
+    class_props=['name','shortname']
+
+class Hours(SmartObject):
+    class_props=['type','value']
+    class_singlefkey=['destination','source']
+class HoursSet(set):
+    def sum(self,onlyType=None,destination=None,source=None):
+        a=0.0
+        for x in self:
+            if onlyType==None or x.type in onlyType:
+                if destination==None or destination==x.destination:
+                    if source==None or source==x.source:
+                        a+=float(x.value)
+        return(a)
+    def sources(self,onlyType=None):
         a=set()
-        for x in self.others:
-            a=a.union(set(x.getComps(year)))
-        return list(a)
-    def getLettreList(self):
-        t={}
-        for x in self.others:
-            for y in x.getLettreList():
-                t[y]=1
-                tt=list(t.keys())
-                tt.sort()
-        return tt
-
+        for x in self:
+            if onlyType==None or x.type in onlyType:
+                a.add(x.source)
+        return(a)
+    def destinations(self,onlyType=None):
+        a=set()
+        for x in self:
+            if onlyType==None or x.type in onlyType:
+                a.add(x.destination)
+        return(a)
+        
+            
     
 class ReaderCSV:
-    def __init__(self,ref):
-        self.REF=ref
-    def readRowFromComp(self,row):
-        infotype=row[1]
-        compcode=row[0]
-        code=row[2]
-        value=row[3]
-        comp=self.REF.getComp(compcode)
-        if infotype in ['ac','aclevel', 'acnum']:
-            self.REF.getAC(code,compcode).addInfo(infotype,value)
+    def __init__(self,path):
+        self.objects={}
+        self.path=path
+    def addrow(self,row):
+        parent=row[0]
+        parentkey=row[1]
+        id=row[2]
+        infotype=row[3]
+        value=row[4]
+        order=row[5]
+        if (order!=''):
+            order=int(order)
+        if id not in self.objects:
+            self.objects[id]={}
+            self.objects[id]['parent']=parent
+            self.objects[id]['parentkey']=parentkey
+            self.objects[id]['id']=id
         else:
-            comp.addInfo(infotype,code,value)
-    def readRowFromParcours(self,row):
-        rkey=row[0]
-        infotype=row[1]
-        value=row[2]
-        self.REF.getParcours(rkey).addInfo(infotype,value)
-    def readRowFromRess(self,row):
-        resscode=row[0]
-        infotype=row[1]
-        value=row[2]
-        self.REF.getRessource(resscode).addInfo(infotype,value)
-    def readRowFromSavoirs(self,row):
-        resscode=row[0]
-        value=row[1]
-        if len(resscode)>0:
-            self.REF.getRessource(resscode,fail=True).addInfo('savoir',value)
-    def readRowFromPortfolio(self,row):
-        resscode=row[0]
-        self.REF.PORTFOLIOCODES.append(resscode)
-    def readRowFromCoeffs(self,row):
-        resscode=row[0]
-        infotype=row[1]
-        comp=row[2]
-        value=row[3]
-        self.REF.addCoeff(resscode,comp,value)
-    def readRowFromSAE(self,row):
-        infotype=row[1]
-        rkey=row[0]
-        code=row[2]
-        order=row[3]
-        if rkey in self.REF.PORTFOLIOCODES:
-            sae=self.REF.getPortfolio(rkey)
-        else:
-            sae=self.REF.getSAE(rkey)
-        if infotype[0:7]=='exemple':
-            if re.match(r'^[0-9]+$',order) and int(order)>0:
-                exemple=sae.getExemple(order)
-                exemple.addInfo(infotype[7:],code)
+            if self.objects[id]['parent']!=parent or self.objects[id]['parentkey']!=parentkey:
+                raise Exception('Data inconsistent : two entries with id {} and differing parenthood ({},{}) and ({},{}).'.format(id,parent,parentkey,self.objects[id]['parent'],self.objects[id]['parentkey']))
+        if order=='':
+            if infotype in self.objects[id]:
+                raise Exception('Data inconsistent : two entries with id {}, infotype {} and two values {} and {}.'.format(id,infotype,value,self.objects[id][infotype]))
             else:
-                raise Exception('No order for example ({})'.format(str(row)))
-        elif len(rkey)>0:
-            sae.addInfo(infotype,code)
-    def readRowFromHoraires(self,row):
-        nature=row[1]
-        value=atof(row[2])
-        source=row[0]
-        destination=row[3]
-        self.REF.getHoursBlock(source).addHoursOut(nature,destination,value)
-        self.REF.getHoursBlock(destination).addHoursIn(nature,source,value)
-    def readRowFromRef(self,row):
-        key=row[0]
-        value=row[1]
-        order=row[2]
-        if key=='name':
-            self.REF.name=value
-        if key=='shortname':
-            self.REF.shortname=value
-        if key=='version':
-            self.REF.version=value
-        if key=='number':
-            self.REF.number=value
-        if key=='introduction':
-            self.REF.introduction[order]=value
-        if key=='introductionparcours':
-            self.REF.introductionparcours[order]=value
-        if key=='introductionparcoursref':
-            self.REF.introductionparcoursref[order]=value
-        if key=='url':
-            self.REF.url=value
-    def readDataFromFile(self,filename,funcname):
+                self.objects[id][infotype]=value
+        else:
+            if infotype not in self.objects[id]:
+                self.objects[id][infotype]=[]
+            x=self.objects[id][infotype]
+            if order<0:
+                raise Exception('Data inconsistent : Entry with id {}, infotype {} and non-strictly-positive order {}.'.format(id,infotype,value,order))
+            if len(x)==order-1:
+                self.objects[id][infotype].append(value)
+            elif len(x)>order-1:
+                if self.objects[id][infotype][order-1]!=None:
+                    raise Exception('Data inconsistent : Entry with id {}, infotype {} and order {} already has value {}.'.format(id,infotype,order,self.objects[id][infotype][order-1]))
+                self.objects[id][infotype][order-1]=value
+            elif order<100: # protection
+                self.objects[id][infotype]=[x[i] if i<len(x) else None for i in range(0,order)]
+                self.objects[id][infotype][order-1]=value
+            else:
+                raise Exception('Order is too large ({})'.format(order))
+    def readDataFromFile(self,filename):
         with open(filename) as csvfile:
             data = csv.reader(csvfile,delimiter='\t',quotechar='"')
             linecount=0
-            func=getattr(self,funcname)
             for row in data:
                 linecount+=1
                 if linecount==1:
                     continue
                 if row[0]=='':
                     continue
-                func(row)
+                self.addrow(row)
     def readData(self):
-        self.readDataFromFile('BUT/REF.tsv','readRowFromRef')
-        self.readDataFromFile('BUT/COMP.tsv','readRowFromComp')
-        self.readDataFromFile('BUT/PORTFOLIO.tsv','readRowFromPortfolio')
-        self.readDataFromFile('BUT/SAE.tsv','readRowFromSAE')
-        self.readDataFromFile('BUT/Horaires.tsv','readRowFromHoraires')
-        self.readDataFromFile('BUT/RESS.tsv','readRowFromRess')
-        self.readDataFromFile('BUT/SAVOIRS.tsv','readRowFromSavoirs')
-        self.readDataFromFile('BUT/PARCOURS.tsv','readRowFromParcours')
-        self.readDataFromFile('BUT/COEFFS.tsv','readRowFromCoeffs')
-        self.REF.addTroncCommun('TRONCCOMMUN')
-        self.REF.updateObjects()
+        for filename in ['Referentiel','Competence','CompositeCompetence','NiveauCompetence','ApprentissageCritique','CompositeApprentissageCritique','Parcours','CompositeParcours','UE','Ressource','Savoir','SAE','SAEModel','Portfolio','Source','Horaires','Coeff']:
+            self.readDataFromFile(os.path.join(self.path,filename+'.tsv'))
+        return self
+    def output(self):
+        d={}
+        for x in self.objects:
+            xx=self.objects[x]
+            xp=xx['parent']
+            xpk=xx['parentkey']
+            del xx['parent']
+            del xx['parentkey']
+            if xp!='/':
+                if xpk not in self.objects[xp]:
+                    self.objects[xp][xpk]={}
+                self.objects[xp][xpk][x]=xx
+            else:
+                if xpk not in d:
+                    d[xpk]={}
+                d[xpk][x]=xx
+        return [d['all'][x] for x in d['all']][0]
 
 
-REF=Referentiel()
-ReaderCSV(REF).readData()
 
+    
 jobs=[]
-jobsn=0
+currentversion='test'
+currentdata='BUT'
+
 for arg in sys.argv[1:]:
     x=re.match(r'^version=(.*)$',arg)
     if x:
-        REF.version=x.group(1)
-    else:
-        files = os.listdir(os.path.join('.',arg))
-        if files:
-            if 'Referentiel.tex' in files:
-                jobs.append((arg,'LaTeX','Referentiel.tex',REF.version))
-            if 'Referentiel.html' in files:
-                jobs.append((arg,'HTML','Referentiel.html',REF.version))
-            jobsn+=1
-if jobsn==0:        
-    jobs=[('ACDI','LaTeX','Referentiel.tex')]
+        currentversion=x.group(1)
+        continue
+    x=re.match(r'^data=(.*)$',arg)
+    if x:
+        currentdata=x.group(1)
+        continue
+    files = os.listdir(os.path.join('.',arg))
+    if files:
+        if 'Referentiel.tex' in files:
+            jobs.append((arg,'LaTeX','Referentiel.tex',currentversion,currentdata))
+        if 'Referentiel.html' in files:
+            jobs.append((arg,'HTML','Referentiel.html',currentversion,currentdata))
+        if 'Referentiel.json' in files:
+            jobs.append((arg,'JSON','Referentiel.json',currentversion,currentdata))
 
+if len(jobs)==0:
+    jobs=[('ACDI','LaTeX','Referentiel.tex',currentversion,currentdata)]
+
+REF=None
 for arg in jobs:
+    # Legacy format (bunch of Tab separated values)
+    if os.path.isdir(arg[4]) and os.path.isfile(os.path.join(arg[4],'Referentiel.tsv')):
+        x=ReaderCSV(arg[4])
+        data=x.readData().output()
+    else:
+        # JSON format
+        with open(arg[4]) as json_file:
+            data = json.load(json_file)
+    REF=Referentiel(data['id'],data)
+    REF.dereferenceAll()
+    if arg[3]!='test' or len(REF.version)==0:
+        REF.version=arg[3]
     if arg[1]=='LaTeX':
-        REF.version=arg[3]
         oneprinter=LaTeXPrinter(REF,arg[0])
-        oneprinter.addTemplate(arg[2],REF.getId(),{})
+        oneprinter.addTemplate(arg[2],REF.getShortname(),{})
         oneprinter.run()
-    elif arg=='HTML':
-        REF.version=arg[3]
+    elif arg[1]=='HTML':
         oneprinter=HTMLPrinter(REF,arg[0])
-        oneprinter.addTemplate(arg[2],REF.getId(),{})
+        oneprinter.addTemplate(arg[2],REF.getShortname(),{})
+        oneprinter.run()
+    elif arg[1]=='JSON':
+        oneprinter=JSONPrinter(REF,arg[0])
+        oneprinter.addTemplate(arg[2],REF.getShortname(),{})
         oneprinter.run()
 
 sys.exit(0)

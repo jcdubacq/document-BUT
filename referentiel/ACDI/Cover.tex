@@ -4,20 +4,20 @@
 \thispagestyle{empty}
 \begin{tikzpicture}[remember picture,overlay,x=1cm,y=1cm]
   \node[inner sep=0pt,anchor=north west] (logo) at ($ (current page.north west)+(1.3,-.94) $) {\includegraphics[width=49.989mm]{assets/logo_acdi.png}};
-  \node[inner sep=0pt,anchor=north] (headerR) at ($ (current page.north west)+(16.88,-2.5) $) {\fontspec{Arial}\normalsize\bfseries\selectfont PN LP-BUT \VAR{data.getShortId()} 2021};
+  \node[inner sep=0pt,anchor=north] (headerR) at ($ (current page.north west)+(16.88,-2.5) $) {\fontspec{Arial}\normalsize\bfseries\selectfont PN LP-BUT \VAR{data.id|le} 2021};
   \node[inner sep=0pt,anchor=north] (annexe) at ($ .5*(current page.north west)+.5*(current page.north east)+(0,-9.9889) $) {\fontspec{Arial}\Huge\mdseries\selectfont Document d'accompagnement};
   \node[inner sep=0pt,anchor=north] (licencepro) at ($ .5*(current page.north west)+.5*(current page.north east)+(0,-11.8473) $) {\fontspec{Arial}\bfseries\Huge\selectfont Licence professionnelle};
   \node[inner sep=0pt,anchor=north] (licencepro) at ($ .5*(current page.north west)+.5*(current page.north east)+(0,-12.8313) $) {\fontspec{Arial}\bfseries\Huge\selectfont « Bachelor Universitaire de Technologie »};
-  \node[inner sep=0pt,anchor=north] (specialite) at ($ .5*(current page.north west)+.5*(current page.north east)+(0,-15.0928) $) {\fontspec{Arial}\bfseries\Huge\selectfont \VAR{data.getId()|upper}};
+  \node[inner sep=0pt,anchor=north] (specialite) at ($ .5*(current page.north west)+.5*(current page.north east)+(0,-15.0928) $) {\fontspec{Arial}\bfseries\Huge\selectfont \VAR{data.getName()|upper}};
   \node[inner sep=0pt,anchor=north] (specialite) at ($ .5*(current page.north west)+.5*(current page.north east)+(0,-24.0390) $) {\fontspec{Arial}\mdseries\Huge\selectfont Programme national};
   \coordinate (last) at ($ (current page.north west)+(1.7475,-17.9616) $);
-  %% for p in data.getParcoursObjects(forceNormal=True)
+  %% for p in data.getParcours() if p.isPlural()<2
   \node[inner sep=0pt,anchor=north west] (parcours) at (last) {\fontspec{Arial}\mdseries\LARGE\selectfont Parcours};
-  \node[inner sep=0pt,anchor=base west,align=left,text width=143mm] (parcoursB) at ($ (parcours.base east)+(.2,0) $) {\fontspec{Arial}\mdseries\LARGE\selectfont \VAR{p.getNameList()|elegantjoin|le}\rule{0pt}{16pt}};
+  \node[inner sep=0pt,anchor=base west,align=left,text width=143mm] (parcoursB) at ($ (parcours.base east)+(.2,0) $) {\fontspec{Arial}\mdseries\LARGE\selectfont \VAR{p.getName()|le}\rule{0pt}{16pt}};
   \coordinate (last) at ($ (parcours.west|-parcoursB.south)+(0,-0.4) $);
   %% endfor
   \draw[line width=0.5pt,black] ($ (current page.north west)+(1.7,-27.3643) $)--++(17.6,0);
-  \node[inner sep=0pt,anchor=north west] (miniA) at ($ (current page.north west)+(1.7,-27.4741) $) {\fontspec{Arial}\footnotesize\mdseries\selectfont ©~Assemblée des chefs de département \VAR{data.getId()|le}};
+  \node[inner sep=0pt,anchor=north west] (miniA) at ($ (current page.north west)+(1.7,-27.4741) $) {\fontspec{Arial}\footnotesize\mdseries\selectfont ©~\VAR{data.author|le}};
   \node[inner sep=0pt,anchor=north east] (miniA) at ($ (current page.north east)+(-1.7,-27.4741) $) {\fontspec{Arial}\footnotesize\mdseries\selectfont Version \VAR{data.getShortVersion()|le}};
   \node[inner sep=0pt,anchor=north west] (miniB) at ($ (current page.north west)+(1.7,-27.8137) $) {\fontspec{Times New Roman}\footnotesize\mdseries\selectfont \href{\VAR{data.url|le}}{\ul{\VAR{data.url|le}}}};
   \end{tikzpicture}%

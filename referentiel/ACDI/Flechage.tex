@@ -1,20 +1,21 @@
 % # context : data, utils, sem, parcours
 %% set year=utils.semestre2year(sem)
-%% if sem|int is odd
-\newpage
-%% endif
 \subsubsection{Participation aux SAÉ du S\VAR{sem|le} — \VAR{parcours.getCanonical(lower=False)|le}}
-\selectparcours{\VAR{data.getParcoursCanonical(parcours)|le}}
+\selectparcours{\VAR{parcours.getCanonical()|le}}
 \begin{minipage}{\textwidth}
   \begin{center}
-    \def\headertab#1{\multicolumn{2}{c|}{\rotatebox{90}{#1}}}
-    %% set lr=data.getRessourceObjects(semestre=sem,interparcours=parcours)
-    %% set ls=data.getSAEObjects(semestre=sem,interparcours=parcours)
-    %% set lp=data.getPortfolioObjects(semestre=sem,interparcours=parcours)
-    %% set comptabform='>{\columncolor{red}}r@{\hspace{2pt}}>{\itshape}r'*(ls+lp).__len__()
+    %% set lr=data.getModule(onlyType=['RESS'],semestre=sem,interparcours=parcours)
+    %% set ls=data.getModule(onlyType=['SAE','PORTFOLIO'],semestre=sem,interparcours=parcours)
+    %% set cols=ls|length
+    %% set comptabform='>{\columncolor{red}}r@{\hspace{2pt}}>{\itshape}r'*cols
     \bigskip
+    \resetwidth
+    %% for m in ls
+    \maxwidth{\textbf{\VAR{m.id|le}}}
+    \maxwidth{\VAR{m.getShortname()|le}}
+    %% endfor
     \begin{tabular}{l%
-        %% for col in ls+lp
+        %% for col in ls
         cc%
         %% endfor
       }
@@ -23,19 +24,22 @@
         \begin{flushleft}
           Ressources\\
           Heures de TD+Heures de TP\\
-          X = participation sans formation complémentaire.
+          X = participation sans formation fléchée.
         \end{flushleft}
       }
-      %% for m in ls+lp
+      %% for m in ls
       &
-      \multicolumn{2}{c}{\rotatebox{90}{\VAR{m.getId()+'~'+m.getShorttxt()|le}}}
+      \multicolumn{2}{c}{\hyperref[FICHE-\VAR{m.id|le}]{\rothead{%
+            \textbf{\VAR{m.id|le}}\\
+            \VAR{m.getShortname()|le}
+          }}}
       %% endfor
       \\
-      %% for m in ls+lp
+      %% for m in ls
       \cmidrule(lr){\VAR{loop.index*2}-\VAR{loop.index*2+1}}
       %% endfor
       
-      %% for m in ls+lp
+      %% for m in ls
       &
       \multicolumn{1}{c}{\rotatebox{0}{TD}}
       &
@@ -51,15 +55,15 @@
       \rowcolor{black!\VAR{colors[colorindex]}!whitepagecolor}
       %% endif
       %% set colors=[0,0,0,0,0,0,0,0,0]
-      \VAR{m.getId()|le}~\VAR{m.getShorttxt()|le}
-      %% set source=data.getHoursBlock(m.getId())
+      \hyperref[FICHE-\VAR{m.id|le}]{\VAR{m.getShortCanonical()|le}}
+      %% set hoursout=data.getHours(source=m)
       %% set outerloop=loop
-      %% for mm in ls+lp
+      %% for mm in ls
       %% set innerloop=loop
       %% set colorindex=(outerloop.index % 3)+3*(innerloop.index % 3)
       &
       %% set types=['TD','TP']
-      %% if source.listOut(destination=mm.getId())|length == 0
+      %% if mm not in hoursout.destinations()
       %% if types.pop()
       %% endif
       \multicolumn{2}{c}{
@@ -71,10 +75,10 @@
         %% if colors[colorindex]>0
         \cellcolor{black!\VAR{colors[colorindex]}}
         %% endif
-        %% if source.listOut(infotype=xt,destination=mm.getId())|length > 0
-        \VAR{source.sumOut(infotype=xt,destination=mm.getId())|hoursnum}
+        %% if mm in hoursout.destinations(onlyType=[xt])
+        \VAR{hoursout.sum(onlyType=[xt],destination=mm)|hoursnum}
         %% else
-        %% if m.getId() in mm.getRessourceList() and loop.length == 1
+        %% if m in mm.ress.values() and loop.length == 1
         X
         %% endif
         %% endif

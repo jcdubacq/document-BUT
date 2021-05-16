@@ -1,100 +1,106 @@
-% # context : data, utils, ress
+% # context : data, utils, module
 \newpage
-\subsubsection{ANNEXE D — fiche Ressource \VAR{ress.getId()|le}~\emph{\VAR{ress.getShorttxt()|le}}}\label{FICHE-\VAR{ress.getId()|le}}
-\selectparcours{\VAR{data.getParcoursCanonical(ress.getParcoursObjects())|le}}
-%% set year=utils.semestre2year(ress.getSemestreList()[0])|le
-%% set comps=data.getPossibleCompObjects(ress.getParcoursObjects(),year)
+\subsubsection{ANNEXE D — fiche Ressource \VAR{module.id|le}~\emph{\VAR{module.getShortname()|le}}}\label{FICHE-\VAR{module.id|le}}
+\selectparcours{\VAR{module.getParcours().getCanonical()|le}}
+%% set year=utils.semestre2year(module.sem)|le
+%% set comps=module.getParcours().getCompLevel(year)|sort(attribute='id')
 %% set t=comps|length
 %% set dimens={'oneinmany':'{0:.3f}mm'.format((190.0-(t+1)*0.2-t*4.0)/t),'allbutoneinmany':'{0:.3f}mm'.format((190.0-3*0.2-2*4.0)-(190.0-(t+1)*0.2-t*4.0)/t),'all':'{0:.3f}mm'.format((190.0-2*0.2-1*4.0)/1)}
 %% set tabularformat='|'+('>{\\centering\\arraybackslash}p{'+dimens['oneinmany']+'}|')*t
 %% set mconeleft='\\multicolumn{1}{|>{\\bfseries\\RaggedRight\\arraybackslash}p{'+dimens['oneinmany']+'}|}'
 %% set mcallright='\\multicolumn{'+'{0}'.format(t-1)+'}{>{\\RaggedRight\\arraybackslash}p{'+dimens['allbutoneinmany']+'}|}'
 %% set mcone='\\multicolumn{'+'{0}'.format(t)+'}{|>{\\bfseries\\centering\\arraybackslash}p{'+dimens['all']+'}|}'
-%% set semestres=ress.getSemestreList()
-%% set goodac=ress.getACObjects()
-%% set allsaes=data.getSAEObjects()
-%% set source=data.getHoursBlock(ress.getId())
-%% set resstot=source.sumIn(['TP','TD'])-source.sumOut(['TP','TD'])
-%% set resstp=source.sumIn(['TP'])-source.sumOut(['TP'])
-%% set ressproj=source.sumIn(['PROJ'])-source.sumOut(['PROJ'])
+%% set semestres=module.sem
+%% set goodac=module.ac.values()
+%% set allsaes=data.getModule(onlyType='SAE',semestre=module.sem)|sort(attribute='id')
+%% set hoursout=data.getHours(source=module)
+%% set hoursin=data.getHours(destination=module)
 
 \begin{center}
   \begin{tabular}{\VAR{tabularformat}}\hline
-    \VAR{mconeleft}{Nom} & \VAR{mcallright}{\VAR{ress.getLongtxt()|le}}\\\hline
-    \VAR{mconeleft}{Semestre}\VAR{'s' if semestres.__len__()>1 else ''} & \VAR{mcallright}{\VAR{semestres|elegantjoin|le}}\\\hline
+    \VAR{mconeleft}{Nom} & \VAR{mcallright}{\VAR{module.getName()|le}}\\\hline
+    \VAR{mconeleft}{Semestre} & \VAR{mcallright}{\VAR{semestres|le}}\\\hline
     \VAR{mcone}{Compétences ciblées}\\\hline
-    \VAR{utils.formatObjects('Compétence `getNum`',comps)|le|join(' & ')}
+    %% for c in comps
+    %% if not loop.first
+    &
+    %% endif
+    Compétence \VAR{c.parent.number|le}
+    %% endfor
     \\\hline
     %% for c in comps
-    %% for ac in goodac if ac.getCompId()==c.getId()
+    %% for ac in goodac if ac.parent==c
     %% if loop.first
-    \VAR{c.getNiveauDict(year).values()|elegantjoin|le}
+    \VAR{c.getName()|le}
     %% endif
     %% endfor
     %% if not loop.last
-                         &
-                         %% endif
-                         %% endfor
+    &
+    %% endif
+    %% endfor
     \\\hline
     \VAR{mcone}{Apprentissages critiques}\\\hline
     %% for c in comps
-    %% for ac in goodac if ac.getCompId()==c.getId()
+    %% for ac in goodac if ac.parent==c
     %% if not loop.first
     \par
     %% endif
-    \textbf{AC \VAR{ac.getNum()|le}} \VAR{ac.getLongtxt()|le}
+    \textbf{AC \VAR{ac.num|le}} \VAR{ac.getName()|le}
     %% endfor
     %% if not loop.last
-                         &
-                         %% endif
-                         %% endfor
+    &
+    %% endif
+    %% endfor
     \\\hline
     \VAR{mconeleft}{SAÉ concernées} & \VAR{mcallright}{
-      %% for sae in allsaes if ress in sae.getRessourceObjects()
-                                      \hyperref[FICHE-\VAR{sae.getId()|le}]{\VAR{sae.getId()|le}~\VAR{sae.getLongtxt()|le}}
-                                      %% if not loop.last
-                                      \par
-                                      %% endif
-                                      %% else
-                                      —
-                                      %% endfor
-                                      }\\\hline
+      %% for sae in allsaes if sae in hoursout.destinations() or module in sae.ress.values()
+      \hyperref[FICHE-\VAR{sae.id|le}]{\VAR{sae.id|le}~\VAR{sae.getName()|le}}
+      %% if not loop.last
+      \par
+      %% endif
+      %% else
+      —
+      %% endfor
+    }\\\hline
     \VAR{mconeleft}{Prérequis} & \VAR{mcallright}{
-      %% for prq in ress.getPrerequisObjects()
-                                 \hyperref[FICHE-\VAR{prq.getId()|le}]{\VAR{prq.getId()|le}~\VAR{prq.getLongtxt()|le}}
-                                 %% if not loop.last
-                                 ;
-                                 %% endif
-                                 %% else
-                                 —
-                                 %% endfor
-                                 }\\\hline
+      %% for prq in module.prerequisite.values()
+      \hyperref[FICHE-\VAR{prq.id|le}]{\VAR{prq.id|le}~\VAR{prq.getName()|le}}
+      %% if not loop.last
+      ;
+      %% endif
+      %% else
+      —
+      %% endfor
+    }\\\hline
     
     \VAR{mconeleft}{Descriptif\par détaillé}
-                         &\VAR{mcallright}{
-                           \VAR{ress.getObjectifList()|le|join('\\par\n')}
-                           %% set sav=ress.getSavoirsList()
-                           %% if sav|length>0
-    Les savoirs de référence suivants devront être étudiés :
-    \begin{itemize}[nosep,topsep=0pt,label=\textitemize,leftmargin=1pc,labelsep=*]
-      %% for s in sav
-    \item \VAR{s|le}
-      %% endfor
-    \end{itemize}
-    %% endif
-    \VAR{ress.getDescriptionList()|le|join('\\par\n')}
+    &\VAR{mcallright}{
+      \VAR{module.topic|le|join('\\par\n')}\par
+      %% set sav=module.learning.values()|sort(attribute='id')
+      %% if sav
+      Les savoirs de référence suivants devront être étudiés :
+      \begin{itemize}[nosep,topsep=0pt,label=\textitemize,leftmargin=1pc,labelsep=*]
+        %% for s in sav
+      \item \VAR{s.topic|join('')|le}
+        %% endfor
+      \end{itemize}
+      %% endif
+      %% if module.description
+      \VAR{module.description|le|join('\\par\n')}
+      %% endif
     }\\\hline 
     \VAR{mconeleft}{Mots clés}
-                         & \VAR{mcallright}{
-                           %% set keywords=ress.getKeywordsList()
-                           %% if keywords|length > 0
-                           \VAR{keywords|join(', ')|le}
-                           %% else
-                           —
-                           %% endif
-                           }\\\hline
+    & \VAR{mcallright}{
+      %% set keywords=module.keywords
+      %% if keywords|length > 0
+      \VAR{keywords|le}
+      %% else
+      —
+      %% endif
+    }\\\hline
     \VAR{mconeleft}{Heures de formation} & \VAR{mcallright}{
-                                           \VAR{resstot|hours} (dont \VAR{resstp|hours} de TP)
-                                           }\\\hline
+      \VAR{(hoursin.sum(onlyType=['TD','TP'])-hoursout.sum(onlyType=['TD','TP']))|hours} (dont  
+      \VAR{(hoursin.sum(onlyType=['TP'])-hoursout.sum(onlyType=['TP']))|hours} de TP)
+    }\\\hline
   \end{tabular}
 \end{center}

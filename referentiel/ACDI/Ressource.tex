@@ -1,10 +1,10 @@
-% # context : data, utils, ress
-%% set year=utils.semestre2year(ress.getSemestreList()[0])|le
-%% set possiblecomps=data.getPossibleCompObjects(ress.getParcoursObjects(),year)
+% # context : data, utils, module
+%% set year=utils.semestre2year(module.sem)|le
+%% set possiblecomps=module.getParcours().getCompLevel(year)|sort(attribute='id')
 %% set complettres=['X','A','B','C','D','E','F']
 \newpage
-\invisiblesubsubsection{ANNEXE D --- fiche Ressource \VAR{ress.getId()|le}~\emph{\VAR{ress.getShorttxt()|le}}}\label{FICHE-\VAR{ress.getId()|le}}
-\selectparcours{\VAR{data.getParcoursCanonical(ress.getParcoursObjects())|le}}
+\invisiblesubsubsection{Ressource \VAR{module.id|le}~\emph{\VAR{module.getShortname()|le}}}\label{FICHE-\VAR{module.id|le}}
+\selectparcours{\VAR{module.getParcours().getCanonical()|le}}
 \begin{tikzpicture}[remember picture,overlay,x=1mm,y=1mm,every node/.style={inner sep=0pt,outer sep=0pt}]
   \coordinate (NW) at (2,42);
   \coordinate (NE) at (188,42);
@@ -26,14 +26,14 @@
   % 
   \draw[black,line width=1mm] (start-|NW)--(start-|NWi);
   \draw[black,line width=1mm] ($ (start-|NW)+(0,10) $)--($ (start-|NWi)+(0,10) $);
-  \node[draw,black,fill=black,text=white,line width=1mm,rounded corners=5mm,text width=30mm,minimum height=30mm,anchor=south west,inner sep=0pt,outer sep=0pt] (bigtitle) at ($ (start-|NWi)+(0,-10) $) {\centering\LARGE\bfseries\selectfont Ressource\\\vspace*{2mm}\fontsize{32}{32}\bfseries\selectfont \VAR{ress.getId()|le}};
+  \node[draw,black,fill=black,text=white,line width=1mm,rounded corners=5mm,text width=30mm,minimum height=30mm,anchor=south west,inner sep=0pt,outer sep=0pt] (bigtitle) at ($ (start-|NWi)+(0,-10) $) {\centering\LARGE\bfseries\selectfont Ressource\\\vspace*{2mm}\fontsize{32}{32}\bfseries\selectfont \VAR{module.id|le}};
   \draw[black,line width=1mm] ($ (start-|NWi)+(30,0) $)--(start-|NE);
   \draw[black,line width=1mm] ($ (start-|NWi)+(30,10) $)--($ (start-|NE)+(0,10) $);
-  \node[anchor=west,color=blacktextemphcolor,text height=3ex,text depth=1ex] at ($ (start-|NWi)+(32,5) $) {\normalfont\fontsize{13}{13}\bfseries\color{blacktextemphcolor}\VAR{ress.getLongtxt()|le}};
+  \node[anchor=west,color=blacktextemphcolor,text height=3ex,text depth=1ex] at ($ (start-|NWi)+(32,5) $) {\normalfont\fontsize{13}{13}\bfseries\color{blacktextemphcolor}\VAR{module.getName()|le}};
   %
   % Breadcrumbs
   %
-  %% set arianeList=ress.getDisciplineList()
+  %% set arianeList=module.getDiscipline()
   \coordinate (last) at (NEi|-start);
   %% for ariane in arianeList
   \node[anchor=north east] (ariane) at ($ (last)+(0,-1) $) {%
@@ -47,12 +47,11 @@
     %% else
     \color{blacktextdimmedcolor!50!whitepagecolor}    
     %% endfor
-    \VAR{ress.getShorttxt()|le}%
+    \VAR{module.getShortname()|le}%
   };
   \coordinate (last) at (ariane.south east);
   %% endfor
   \coordinate (arianesouth) at (last);
-  %% set module=ress
   %% include 'Fresco.tex'
   %
   % Boxes
@@ -68,28 +67,28 @@
   \coordinate (last) at (titredescriptif.south-|NWi);
   \node[anchor=north west,text width={\xmarkzero}] (descriptif) at ($ (last)+(2,-1) $) {
     \setlength\topsep{0pt}\setlength\partopsep{0pt}\begin{flushleft}
-      %% if ress.getObjectifList()
+      %% if module.topic
       \textbf{Quel objectif pour cette ressource ?}\\
-      \VAR{ress.getObjectifList()|le|join('\\par\n')}\par
+      \VAR{module.topic|le|join('\\par\n')}\par
       %% endif
-      %% set sav=ress.getSavoirsList()
-      %% if sav|length>0
+      %% set sav=module.learning.values()|sort(attribute='id')
+      %% if sav
       \textbf{Quels savoirs de référence à étudier ?}\\
       \begin{itemize}[nosep,topsep=0pt,label=\textitemize,leftmargin=1pc,labelsep=*]
         %% for s in sav
-      \item \VAR{s|le}
+      \item \VAR{s.topic|join('')|le}
         %% endfor
       \end{itemize}
       %% endif
-      %% if ress.getDescriptionList()
-      \textbf{Comment cette ressource fait monter en compétence ?}\\    
-      \VAR{ress.getDescriptionList()|le|join('\\par\n')}
+      %% if module.description
+      \textbf{Comment cette ressource fait-elle monter en compétence ?}\\    
+      \VAR{module.description|le|join('\\par\n')}
       %% endif
     \end{flushleft}
   };
   \coordinate (last) at (descriptif.south-|NWi);
-  %% set keywords=ress.getKeywordsList()|join(',')
-  %% if keywords|length > 0
+  %% set keywords=module.keywords
+  %% if keywords
   \node[anchor=north west,text width={\xmarkzero}] (keywords) at ($ (last)+(2,0) $) {
     \begin{center}
       %% for k in keywords.split(',')
@@ -108,10 +107,10 @@
   inner sep=2mm,rounded corners=2mm,%
   line width=.5mm,draw=black,%
   text width={\xmarkfive},anchor=north west] (combobox) at (lastwest-|NWi) {%
-    {\large\bfseries Cursus}\hfill S\VAR{ress.getSemestreList()|elegantjoin|le}\\
+    {\large\bfseries Cursus}\hfill S\VAR{module.sem|le}\\
     \textbf{Prérequis :}
-    %% for prq in ress.getPrerequisObjects()
-    \hyperref[FICHE-\VAR{prq.getId()|le}]{\VAR{prq.getId()|le}~\VAR{prq.getShorttxt()|le}}
+    %% for prq in module.prerequisite.values()|sort(attribute='id')
+    \hyperref[FICHE-\VAR{prq.id|le}]{\VAR{prq.id|le}~\VAR{prq.getShortname()|le}}
     %% if not loop.last
     ;
     %% endif
@@ -119,112 +118,64 @@
     aucun
     %% endfor
     \\
-    %% set allsaes=data.getSAEObjects()
-    %% set portfolios=data.getPortfolioObjects()
-    %% set source=data.getHoursBlock(ress.getId())
+    %% set hoursout=data.getHours(source=module)
+    %% set hoursin=data.getHours(destination=module)
     \textbf{Heures totales}\dotfill%
-    \textcolor{blacktextemphcolor}{\bfseries\VAR{source.sumIn(infotype=['TD'])|hours}} TD et 
-    \textcolor{blacktextemphcolor}{\bfseries\samebox{\bfseries 00h}{\VAR{source.sumIn(infotype=['TP'])|hours}}} TP\\[.5ex]
-    \emph{dont ressource}\dotfill
-    \VAR{(source.sumIn(infotype=['TD'])-source.sumOut(infotype=['TD']))|hours} TD et 
-    \samebox{\bfseries 00h}{\VAR{(source.sumIn(infotype=['TP'])-source.sumOut(infotype=['TP']))|hours}} TP%
-    \llap{\rule[2.1ex]{8em}{1pt}}
-    \\
-    %% for sae in allsaes if ress in sae.getRessourceObjects() or source.sumOut(destination=[sae.getId()])>0
-    %% if loop.first
-    Lien\VAR{'s' if loop.length>1 else ''} avec les SAÉ :\\
+    \textcolor{blacktextemphcolor}{\bfseries \VAR{hoursin.sum(onlyType=['TD'])|hours}} TD et 
+    \textcolor{blacktextemphcolor}{\bfseries\samebox{\bfseries 00h}{\VAR{hoursin.sum(onlyType=['TP'])|hours}}} TP\\[.5ex]
+    %% for h in hoursin.sources()
+    %% if loop.first:
+    \emph{dont
+      %% endif
+      \VAR{h.getShortname()|le}
+      %% if not loop.last
+      , 
+      %% else
+    }\dotfill
     %% endif
-    \hyperref[FICHE-\VAR{sae.getId()|le}]{\VAR{sae.getId()|le}~\VAR{sae.getShorttxt()|le}}
-    %% if source.sumOut(destination=[sae.getId()])>0
+    %% endfor
+    \VAR{(hoursin.sum(onlyType=['TD'])-hoursout.sum(onlyType=['TD']))|hours} TD et 
+    \samebox{\bfseries 00h}{%
+      \VAR{(hoursin.sum(onlyType=['TP'])-hoursout.sum(onlyType=['TP']))|hours}%
+    } TP\llap{\rule[2.1ex]{8em}{1pt}}
+    \\
+    %% set allsaes=data.getModule(onlyType='SAE',semestre=module.sem)|sort(attribute='id')
+    %% for sae in allsaes if sae in hoursout.destinations() or module in sae.ress.values()
+    %% if loop.first
+    Lien\VAR{'s' if loop.length>1 else ''} avec les SAÉ\\
+    %% endif
+    \hyperref[FICHE-\VAR{sae.id|le}]{\VAR{sae.id|le}~\VAR{sae.getShortname()|le}}
+    %% if sae in hoursout.destinations()
     \dotfill
-    \VAR{source.sumOut(destination=[sae.getId()],infotype=['TD'])|hours} TD et 
-    \samebox{\bfseries 00h}{\VAR{source.sumOut(destination=[sae.getId()],infotype=['TP'])|hours}} TP
+    \VAR{hoursout.sum(destination=sae,onlyType=['TD'])|hours} TD et 
+    \samebox{\bfseries 00h}{%
+      \VAR{hoursout.sum(destination=sae,onlyType=['TP'])|hours}%
+    } TP
     %% endif
     \\
     %% endfor
-    %% for sae in portfolios if ress in sae.getRessourceObjects() or source.sumOut(destination=[sae.getId()])>0
+    %% set allsaes=data.getModule(onlyType='PORTFOLIO',semestre=module.sem)|sort(attribute='id')
+    %% for sae in allsaes if sae in hoursout.destinations() or module in sae.ress.values()
     %% if loop.first
-    Lien\VAR{'s' if loop.length>1 else ''} avec le portfolio :\\
+    Lien\VAR{'s' if loop.length>1 else ''} avec le portfolio\\
     %% endif
-    \hyperref[FICHE-\VAR{sae.getId()|le}]{\VAR{sae.getId()|le}~\VAR{sae.getShorttxt()|le}}
-    %% if source.sumOut(destination=[sae.getId()])>0
+    \hyperref[FICHE-\VAR{sae.id|le}]{\VAR{sae.id|le}~\VAR{sae.getShortname()|le}}
+    %% if sae in hoursout.destinations()
     \dotfill
-    \VAR{source.sumOut(destination=[sae.getId()],infotype=['TD'])|hours} TD et 
-    \samebox{\bfseries 00h}{\VAR{source.sumOut(destination=[sae.getId()],infotype=['TP'])|hours}} TP
+    \VAR{hoursout.sum(destination=sae,onlyType=['TD'])|hours} TD et 
+    \samebox{\bfseries 00h}{%
+      \VAR{hoursout.sum(destination=sae,onlyType=['TP'])|hours}%
+    } TP
     %% endif
     \\
     %% endfor
   };
 
   \coordinate (lastwest) at ($ (combobox.south-|NWi)+(0,-2) $);
-
-  %% for comp in possiblecomps if comp.getCoeff(ress) or ress.getACObjects(comp=comp)
-  %% set compnum=comp.getNum()|int
-  %% set compltr=complettres[compnum]
-  %% set acs=ress.getACObjects(comp=comp)
-  %% set coeffs=comp.getCoeff(ress)
-  %% set sem=ress.getSemestreList()[0]
-  %% set coeffsum=comp.getCoeffs(onlyType=['RESS','PORTFOLIO','SAE'],semestre=sem)
-  %% set coeffsumstr=('/'+coeffsum[1]) if coeffsum[1]!=100 else '%'
-  \compareytozero{($ (lasteast)-(lastwest) $)}{\coordinate(stpoint) at (lastwest);}{\coordinate(stpoint) at ($ (lasteast)-(mark5)+(NWi)+(-4,0) $);}
-  \node[text=comp\VAR{compltr}pcolor,fill=comp\VAR{compltr}color,%
-  inner sep=2mm,rounded corners=2mm,%
-  line width=.5mm,draw=comp\VAR{compltr}color,%
-  text width={\xmarkfive},anchor=north west] (ac\VAR{compnum}title) at (stpoint) {%
-    \Large\bfseries
-    %% if comp.isPlural()>1
-    \VAR{comp.getLongtxt()}
-    %% else
-    Compétence \VAR{compnum}
-    %% endif
-  };
-  %% if coeffs
-  \node[draw=blackpagecolor,inner sep=1mm,anchor=north east,fill=whitepagecolor,rounded corners] (coeffs) at ($ (ac\VAR{compnum}title.north east)+(-1,-1) $)
-  {\textcolor{blacktextcolor}{\large\bfseries\VAR{coeffs[1]|le}\VAR{coeffsumstr|le}}};
-  %% endif
-
-  \coordinate (last) at (ac\VAR{compnum}title.south west);
-  \node[text=blacktextcolor,fill=comp\VAR{compltr}color!25!whitepagecolor,%
-  inner sep=2mm,%
-  text width={\xmarkfive},anchor=north west] (ac\VAR{compnum}level) at ($ (last)+(0,1.5) $) {%
-    \setlength\topsep{0pt}\setlength\partopsep{0pt}\begin{flushleft}
-      %% if comp.isPlural()>1
-      Enseignement transversal
-      %% else
-      \VAR{comp.getNiveauDict(year).values()|elegantjoin|le}
-      %% endif
-    \end{flushleft}
-  };
-  \coordinate (last) at (ac\VAR{compnum}level.south west);
-  \node[text=blacktextcolor,fill=comp\VAR{compltr}color!25!whitepagecolor,%
-  inner sep=2mm,%
-  text width={\xmarkfive},anchor=north west] (ac\VAR{compnum}acs) at ($ (last)+(0,1.5) $) {
-    \setlength\topsep{0pt}\setlength\partopsep{0pt}\begin{flushleft}
-      %% if acs
-      %% for ac in acs
-      %% if not ac.isPlural()>1
-      \textbf{AC \VAR{ac.getNum()|le}}
-      %% endif
-      \VAR{ac.getLongtxt()|le}
-      %% if not loop.last
-      \par
-      %% endif
-      %% endfor
-      %% else
-      (pas d'apprentissage critique)
-      %% endif
-    \end{flushleft}
-  };
-  \draw[line width=.5mm,draw=comp\VAR{compltr}color] (ac\VAR{compnum}title.base west)--(ac\VAR{compnum}acs.south west)--(ac\VAR{compnum}acs.south east)--(ac\VAR{compnum}title.base east);
-  \draw[line width=.5mm,draw=comp\VAR{compltr}color,dotted] ($ (0,-1)+(ac\VAR{compnum}acs.north west) $)--($ (0,-1)+(ac\VAR{compnum}acs.north east) $);
-  \compareytozero{($ (lasteast)-(lastwest) $)}{\coordinate(lastwest) at ($ (ac\VAR{compnum}acs.south west)+(0,-2) $);}{\coordinate(lasteast) at ($ (ac\VAR{compnum}acs.south east)+(0,-2) $);}
-  %% endfor
-
+  %% include 'CompFragment.tex'
+  
   \begin{pgfonlayer}{bg}
     \node[inner sep=2mm,rounded corners=2mm,draw=blacktextcolor,line width=.5mm,fit=(descriptif) (titredescriptif) (keywords)]{};
   \end{pgfonlayer}
-
-
-
 \end{tikzpicture}
 \vfill

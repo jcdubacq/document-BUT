@@ -8,20 +8,21 @@
 \coordinate(frescolast) at (frescostart);
 %% set compnum=possiblecomps|length
 %% set comppart=1/compnum|float
-%% for comp in possiblecomps
-%% set compnum=comp.getNum()|int
+%% for complevel in possiblecomps
+%% set comp=complevel.parent
+%% set compnum=comp.number|int
 %% set compltr=complettres[compnum]
-%% set possibleacs=comp.getACObjects(year=year)
-%% set acs=module.getACObjects(comp=comp)
+%% set possibleacs=complevel.ac.values()
+%% set acs=module.getAC(subcomp=complevel)
 %% set acsn=acs|length
 %% set acsnb=possibleacs|length
 %% set acspart=comppart*(1/acsnb)|float
 \coordinate (fresconew) at ($ \VAR{comppart}*(frescovect)+(frescolast) $);
 \draw[line cap=butt,line width=1mm,draw=comp\VAR{compltr}color\VAR{'!20!whitepagecolor' if acs|length==0 else ''}] (frescolast)--(fresconew);
 %% for ac in acs
-%% set acnum=ac.getNum()|int
+%% set acnum=ac.num|int
 %% set acstart=acspart*(acnum-1)
-\draw[line cap=butt,line width=2mm,draw=comp\VAR{compltr}color] ($ (frescolast)+(0,2)+\VAR{acstart}*(frescovect) $)--++($ \VAR{acspart}*(frescovect) $);
+\draw[line cap=butt,line width=2mm,draw=comp\VAR{compltr}color] ($ (frescolast)+(0.5,2)+\VAR{acstart}*(frescovect) $)--++($ \VAR{acspart}*(frescovect)+(-1,0) $);
 %% endfor
 \coordinate (frescolast) at (fresconew);
 %% endfor
