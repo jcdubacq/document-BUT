@@ -3,179 +3,153 @@
 %% set possiblecomps=module.getParcours().getCompLevel(year)|sort(attribute='id')
 %% set complettres=['X','A','B','C','D','E','F']
 \newpage
-\invisiblesubsubsection{Ressource \VAR{module.id|le}~\emph{\VAR{module.getShortname()|le}}}\label{FICHE-\VAR{module.id|le}}
-\selectparcours{\VAR{module.getParcours().getCanonical()|le}}
-\begin{tikzpicture}[remember picture,overlay,x=1mm,y=1mm,every node/.style={inner sep=0pt,outer sep=0pt}]
-  \coordinate (NW) at (2,42);
-  \coordinate (NE) at (188,42);
-  \coordinate (NWi) at (10,42);
-  \coordinate (NEi) at (180,42);
-  \coordinate (NW) at (current page.north west);
-  \coordinate (NE) at (current page.north east);
-  \coordinate (NWi) at ($ (NW)+(18,0) $);
-  \coordinate (NEi) at ($ (NE)+(-18,0) $);
-  \coordinate (start) at ($ (current page.north west)+(0,-40) $);
-  \coordinate (mark5) at ($ 1/2*(NWi)+1/2*(NEi)+1/2*(-10,0) $);
-  \path ($ (mark5)-(NWi) $);\pgfgetlastxy{\xmarkfive}{\ymarkfive};
-  \coordinate (mark4) at ($ 2/3*(NWi)+1/3*(NEi)+1/3*(-16,0) $);
-  \coordinate (mark6) at ($ 1/3*(NWi)+2/3*(NEi)+1/3*(-14,0) $);
-  \coordinate (mark0) at ($ (NEi)+(-4,0) $);
-  \path ($ (mark0)-(NWi) $);\pgfgetlastxy{\xmarkzero}{\ymarkzero};
-  % 
-  % Title
-  % 
-  \draw[black,line width=1mm] (start-|NW)--(start-|NWi);
-  \draw[black,line width=1mm] ($ (start-|NW)+(0,10) $)--($ (start-|NWi)+(0,10) $);
-  \node[draw,black,fill=black,text=white,line width=1mm,rounded corners=5mm,text width=30mm,minimum height=30mm,anchor=south west,inner sep=0pt,outer sep=0pt] (bigtitle) at ($ (start-|NWi)+(0,-10) $) {\centering\LARGE\bfseries\selectfont Ressource\\\vspace*{2mm}\fontsize{32}{32}\bfseries\selectfont \VAR{module.id|le}};
-  \draw[black,line width=1mm] ($ (start-|NWi)+(30,0) $)--(start-|NE);
-  \draw[black,line width=1mm] ($ (start-|NWi)+(30,10) $)--($ (start-|NE)+(0,10) $);
-  \node[anchor=west,color=blacktextemphcolor,text height=3ex,text depth=1ex] at ($ (start-|NWi)+(32,5) $) {\normalfont\fontsize{13}{13}\bfseries\color{blacktextemphcolor}\VAR{module.getName()|le}};
-  %
-  % Breadcrumbs
-  %
-  %% set arianeList=module.getDiscipline()
-  \coordinate (last) at (NEi|-start);
-  %% for ariane in arianeList
-  \node[anchor=north east] (ariane) at ($ (last)+(0,-1) $) {%
-    \normalfont\fontsize{9}{9}\bfseries\color{blacktextdimmedcolor}%
-    %% for piece in ariane
-    \VAR{piece|le}
-    %% if loop.last
-    \color{blacktextdimmedcolor!50!whitepagecolor}
-    %% endif
-    >
-    %% else
-    \color{blacktextdimmedcolor!50!whitepagecolor}    
-    %% endfor
-    \VAR{module.getShortname()|le}%
-  };
-  \coordinate (last) at (ariane.south east);
-  %% endfor
-  \coordinate (arianesouth) at (last);
-  %% include 'Fresco.tex'
-  %
-  % Boxes
-  % 
-  \node[fit=(bigtitle.south)(arianesouth)] (bottom) {};
-  \coordinate (last) at ($ (bottom.south)+(0,-3) $);
-  \coordinate (lasteast) at (last-|NEi);
-  \coordinate (lastwest) at (last-|NWi);
-  \node[anchor=north west,text width={\xmarkzero}] (titredescriptif) at ($ (last-|NWi)+(2,-2) $) {
-    \sloppy\bfseries\large\color{blacktextemphcolor}\selectfont
-    Descriptif détaillé
-  };
-  \coordinate (last) at (titredescriptif.south-|NWi);
-  \node[anchor=north west,text width={\xmarkzero}] (descriptif) at ($ (last)+(2,-1) $) {
-    \setlength\topsep{0pt}\setlength\partopsep{0pt}\begin{flushleft}
-      %% if module.topic
-      \textbf{Quel objectif pour cette ressource ?}\\
-      \VAR{module.topic|le|join('\\par\n')}\par
-      %% endif
-      %% set sav=module.learning.values()|sort(attribute='id')
-      %% if sav
-      \textbf{Quels savoirs de référence à étudier ?}\\
-      \begin{itemize}[nosep,topsep=0pt,label=\textitemize,leftmargin=1pc,labelsep=*]
-        %% for s in sav
-      \item \VAR{s.topic|join('')|le}
+\invisiblesubsubsection{Ressource \VAR{module.id|le}~\emph{\VAR{module.getShortname()|le}}}{%
+  \begin{tikzpicture}[remember picture,overlay,baseline=(cornersw.south),
+    x=1mm,y=1mm,every node/.style={inner sep=0pt,outer sep=0pt}]
+    %% set header='Ressource'
+    %% set subheader=''
+    %% set maintitle=module.getName()
+    %% set arianeList=module.getDiscipline()
+    %% set arianeEnd=module.getShortname()
+    %% include 'TitleFragment.tex'
+    \node[anchor=north west,text width={\xmarkzero}] (titredescriptif) at ($ (last-|NWi)+(2,-2) $) {
+      \sloppy\bfseries\large\color{blacktextemphcolor}\selectfont
+      Descriptif détaillé
+    };
+    \coordinate (last) at (titredescriptif.south-|NWi);
+    \node[anchor=north west,text width={\xmarkzero}] (descriptif) at ($ (last)+(2,-1) $) {
+      \setlength\topsep{0pt}\setlength\partopsep{0pt}\begin{flushleft}
+        %% if module.topic
+        \textbf{Quel objectif pour cette ressource ?}\\
+        \VAR{module.topic|le|join('\\par\n')}\par
+        %% endif
+        %% set sav=module.learning.values()|sort(attribute='id')
+        %% if sav
+        \textbf{Quels savoirs de référence à étudier ?}\\
+        \begin{itemize}[nosep,topsep=0pt,label=\textitemize,leftmargin=1pc,labelsep=*]
+          %% for s in sav
+        \item \VAR{s.topic|join('')|le}
+          %% endfor
+        \end{itemize}
+        %% endif
+        %% if module.description
+        \textbf{Comment cette ressource fait-elle monter en compétence ?}\\    
+        \VAR{module.description|le|join('\\par\n')}
+        %% endif
+      \end{flushleft}
+    };
+    \coordinate (last) at (descriptif.south-|NWi);
+    %% set keywords=module.keywords
+    %% if keywords
+    \node[anchor=north west,text width={\xmarkzero}] (keywords) at ($ (last)+(2,0) $) {
+      \begin{center}
+        %% for k in keywords.split(',')
+        %% if loop.first
+        \hfill%
+        %% endif
+        \mbox{
+          \subnode[inner sep=0mm,outer sep=0mm,text height=2ex,text depth=1ex]{kw\VAR{module.getShortId()|le}\VAR{loop.index}}{%
+            \textcolor{blacktextcolor}{\VAR{k|trim|le}}%
+          }%
+        }%
+        %% if not loop.last
+        \hfill%
+        %% else
+        \hfill\null
+        %% endif
         %% endfor
-      \end{itemize}
-      %% endif
-      %% if module.description
-      \textbf{Comment cette ressource fait-elle monter en compétence ?}\\    
-      \VAR{module.description|le|join('\\par\n')}
-      %% endif
-    \end{flushleft}
-  };
-  \coordinate (last) at (descriptif.south-|NWi);
-  %% set keywords=module.keywords
-  %% if keywords
-  \node[anchor=north west,text width={\xmarkzero}] (keywords) at ($ (last)+(2,0) $) {
-    \begin{center}
-      %% for k in keywords.split(',')
-      \tcbox[colback=whitepagecolor, colframe=blackpagecolor, on line, boxsep=0pt, left=4pt, right=4pt, top=4pt, bottom=4pt]{\textcolor{blacktextcolor}{\rule[-1ex]{0mm}{3ex}\VAR{k|trim|le}}}
-      %% endfor
-    \end{center}
-  };
-  %% else
-  \coordinate (keywords) at (last);
-  %% endif
-  \coordinate (last) at ($ (keywords.south)+(0,-4) $);
-  \coordinate (lasteast) at (last-|NEi);
-  \coordinate (lastwest) at (last-|NWi);
-  
-  \node[%
-  inner sep=2mm,rounded corners=2mm,%
-  line width=.5mm,draw=black,%
-  text width={\xmarkfive},anchor=north west] (combobox) at (lastwest-|NWi) {%
-    {\large\bfseries Cursus}\hfill S\VAR{module.sem|le}\\
-    \textbf{Prérequis :}
-    %% for prq in module.prerequisite.values()|sort(attribute='id')
-    \hyperref[FICHE-\VAR{prq.id|le}]{\VAR{prq.id|le}~\VAR{prq.getShortname()|le}}
-    %% if not loop.last
-    ;
-    %% endif
+      \end{center}
+    };
+    %% for k in keywords.split(',')
+    \node[fit=(kw\VAR{module.getShortId()|le}\VAR{loop.index}),%
+    draw=blacktextcolor,
+    dotted,thick,
+    inner sep=1mm,
+    rounded corners=1mm,
+    ] {};
+    %% endfor
     %% else
-    aucun
-    %% endfor
-    \\
-    %% set hoursout=data.getHours(source=module)
-    %% set hoursin=data.getHours(destination=module)
-    \textbf{Heures totales}\dotfill%
-    \textcolor{blacktextemphcolor}{\bfseries \VAR{hoursin.sum(onlyType=['TD'])|hours}} TD et 
-    \textcolor{blacktextemphcolor}{\bfseries\samebox{\bfseries 00h}{\VAR{hoursin.sum(onlyType=['TP'])|hours}}} TP\\[.5ex]
-    %% for h in hoursin.sources()
-    %% if loop.first:
-    \emph{dont
-      %% endif
-      \VAR{h.getShortname()|le}
+    \coordinate (keywords) at (last);
+    %% endif
+    \coordinate (last) at ($ (keywords.south)+(0,-4) $);
+    \coordinate (lasteast) at (last-|NEi);
+    \coordinate (lastwest) at (last-|NWi);
+    
+    \node[%
+    inner sep=2mm,rounded corners=2mm,%
+    line width=.5mm,draw=black,%
+    text width={\xmarkfive},anchor=north west] (combobox) at (lastwest-|NWi) {%
+      {\large\bfseries Cursus}\hfill S\VAR{module.sem|le}\\
+      \textbf{Prérequis :}
+      %% for prq in module.prerequisite.values()|sort(attribute='id')
+      \hyperref[FICHE-\VAR{prq.id|le}]{\VAR{prq.id|le}~\VAR{prq.getShortname()|le}}
       %% if not loop.last
-      , 
+      ;
+      %% endif
       %% else
-    }\dotfill
-    %% endif
-    %% endfor
-    \VAR{(hoursin.sum(onlyType=['TD'])-hoursout.sum(onlyType=['TD']))|hours} TD et 
-    \samebox{\bfseries 00h}{%
-      \VAR{(hoursin.sum(onlyType=['TP'])-hoursout.sum(onlyType=['TP']))|hours}%
-    } TP\llap{\rule[2.1ex]{8em}{1pt}}
-    \\
-    %% set allsaes=data.getModule(onlyType='SAE',semestre=module.sem)|sort(attribute='id')
-    %% for sae in allsaes if sae in hoursout.destinations() or module in sae.ress.values()
-    %% if loop.first
-    Lien\VAR{'s' if loop.length>1 else ''} avec les SAÉ\\
-    %% endif
-    \hyperref[FICHE-\VAR{sae.id|le}]{\VAR{sae.id|le}~\VAR{sae.getShortname()|le}}
-    %% if sae in hoursout.destinations()
-    \dotfill
-    \VAR{hoursout.sum(destination=sae,onlyType=['TD'])|hours} TD et 
-    \samebox{\bfseries 00h}{%
-      \VAR{hoursout.sum(destination=sae,onlyType=['TP'])|hours}%
-    } TP
-    %% endif
-    \\
-    %% endfor
-    %% set allsaes=data.getModule(onlyType='PORTFOLIO',semestre=module.sem)|sort(attribute='id')
-    %% for sae in allsaes if sae in hoursout.destinations() or module in sae.ress.values()
-    %% if loop.first
-    Lien\VAR{'s' if loop.length>1 else ''} avec le portfolio\\
-    %% endif
-    \hyperref[FICHE-\VAR{sae.id|le}]{\VAR{sae.id|le}~\VAR{sae.getShortname()|le}}
-    %% if sae in hoursout.destinations()
-    \dotfill
-    \VAR{hoursout.sum(destination=sae,onlyType=['TD'])|hours} TD et 
-    \samebox{\bfseries 00h}{%
-      \VAR{hoursout.sum(destination=sae,onlyType=['TP'])|hours}%
-    } TP
-    %% endif
-    \\
-    %% endfor
-  };
+      aucun
+      %% endfor
+      \\
+      %% set hoursout=data.getHours(source=module)
+      %% set hoursin=data.getHours(destination=module)
+      \textbf{Heures totales}\dotfill%
+      \textcolor{blacktextemphcolor}{\bfseries \VAR{hoursin.sum(onlyType=['TD'])|hours}} TD et 
+      \textcolor{blacktextemphcolor}{\bfseries\samebox{\bfseries 00h}{\VAR{hoursin.sum(onlyType=['TP'])|hours}}} TP\\[.5ex]
+      %% for h in hoursin.sources()
+      %% if loop.first:
+      \emph{dont
+        %% endif
+        \VAR{h.getShortname()|le}
+        %% if not loop.last
+        , 
+        %% else
+      }\dotfill
+      %% endif
+      %% endfor
+      \VAR{(hoursin.sum(onlyType=['TD'])-hoursout.sum(onlyType=['TD']))|hours} TD et 
+      \samebox{\bfseries 00h}{%
+        \VAR{(hoursin.sum(onlyType=['TP'])-hoursout.sum(onlyType=['TP']))|hours}%
+      } TP\llap{\rule[2.1ex]{8em}{1pt}}
+      \\
+      %% set allsaes=data.getModule(onlyType='SAE',semestre=module.sem)|sort(attribute='id')
+      %% for sae in allsaes if sae in hoursout.destinations() or module in sae.ress.values()
+      %% if loop.first
+      Lien\VAR{'s' if loop.length>1 else ''} avec les SAÉ\\
+      %% endif
+      \hyperref[FICHE-\VAR{sae.id|le}]{\VAR{sae.id|le}~\VAR{sae.getShortname()|le}}
+      %% if sae in hoursout.destinations()
+      \dotfill
+      \VAR{hoursout.sum(destination=sae,onlyType=['TD'])|hours} TD et 
+      \samebox{\bfseries 00h}{%
+        \VAR{hoursout.sum(destination=sae,onlyType=['TP'])|hours}%
+      } TP
+      %% endif
+      \\
+      %% endfor
+      %% set allsaes=data.getModule(onlyType='PORTFOLIO',semestre=module.sem)|sort(attribute='id')
+      %% for sae in allsaes if sae in hoursout.destinations() or module in sae.ress.values()
+      %% if loop.first
+      Lien\VAR{'s' if loop.length>1 else ''} avec le portfolio\\
+      %% endif
+      \hyperref[FICHE-\VAR{sae.id|le}]{\VAR{sae.id|le}~\VAR{sae.getShortname()|le}}
+      %% if sae in hoursout.destinations()
+      \dotfill
+      \VAR{hoursout.sum(destination=sae,onlyType=['TD'])|hours} TD et 
+      \samebox{\bfseries 00h}{%
+        \VAR{hoursout.sum(destination=sae,onlyType=['TP'])|hours}%
+      } TP
+      %% endif
+      \\
+      %% endfor
+    };
 
-  \coordinate (lastwest) at ($ (combobox.south-|NWi)+(0,-2) $);
-  %% include 'CompFragment.tex'
-  
-  \begin{pgfonlayer}{bg}
-    \node[inner sep=2mm,rounded corners=2mm,draw=blacktextcolor,line width=.5mm,fit=(descriptif) (titredescriptif) (keywords)]{};
-  \end{pgfonlayer}
-\end{tikzpicture}
-\vfill
+    \coordinate (lastwest) at ($ (combobox.south-|NWi)+(0,-2) $);
+    %% include 'CompFragment.tex'
+    
+    \begin{pgfonlayer}{bg}
+      \node[inner sep=2mm,rounded corners=2mm,draw=blacktextcolor,line width=.5mm,fit=(descriptif) (titredescriptif) (keywords)]{};
+    \end{pgfonlayer}
+    \node [fit=(lastwest)(lasteast)] (cornersw) {};
+  \end{tikzpicture}
+}\label{FICHE-\VAR{module.id|le}}
+\selectparcours{\VAR{module.getParcours().getCanonical()|le}}

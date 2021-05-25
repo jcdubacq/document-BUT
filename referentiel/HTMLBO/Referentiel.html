@@ -5,80 +5,15 @@
   Semestres: {{data.getSemestres()|elegantjoin}}
 </p>
 <p>
-  Parcours: {{utils.parcoursLettres(data.getParcoursObjects())|elegantjoin}}
-</p>
-<h2>Horaires et coefficients de la formation</h2>
-<ul>
-  {% for sem in data.getSemestres() %}
-  <li>Pour le S{{sem}} :
-    <ul>
-      {% for parcours in data.getParcoursObjects(semestre=sem,expanded=True) %}
-      {% if loop.length > 1 %}
-      <li>Pour le parcours {{parcours.getShorttxt}}<ul>
-          {% endif %}
-          {% set mark='S'+sem+'P'+''.join(parcours.getLettreList()) %}
-          {% set added=printer.addTemplate('Index.html',mark,{'sem':sem,'parcours':parcours}) %}
-          {% set added=printer.addTemplate('Coeffs.html',mark,{'sem':sem,'parcours':parcours}) %}
-          <li><a href="{{data.getShortId()|urlencode}}_Index_{{mark|urlencode}}.html">Horaires du semestre {{sem}} parcours {{parcours.getShorttxt()}}</a></li>
-          <li><a href="{{data.getShortId()|urlencode}}_Coeffs_{{mark|urlencode}}.html">Coefficients du semestre {{sem}} parcours {{parcours.getShorttxt()}}</a></li>
-          {% if loop.length > 1 %}
-        </ul>
-      </li>
-      {% endif %}
-      {% endfor %}
-    </ul>
-  </li>
-  {% endfor %}
-</ul>
-
-<h2>Matrices des apprentissages critiques</h2>
-<ul>
-  {% for year in data.getYears() %}
-  {% set y=year|string %}
-  {% for parcours in data.getParcoursObjects(year=year,expanded=True) %}
-  {% set comps=data.getPossibleCompObjects(data.getParcoursObjects(year=year,interparcours=parcours),year) %}
-  {% for comp in comps %}
-  {% set mark='A'+y+'C'+comp.getNum()+'P'+''.join(parcours.getLettreList()) %}
-  {% set added=printer.addTemplate('Matrice.html',mark,{'year':year,'parcours':parcours,'comp':comp}) %}
-  <li><a href="{{data.getShortId()|urlencode}}_Matrice_{{mark|urlencode}}.html">Matrice de l'année {{year}} compétence C{{comp.getNum()}} parcours {{parcours.getShorttxt()}}</a></li>
-  {% endfor %}
-  {% endfor %}
-  {% endfor %}
-</ul>
-<h2>SAÉ</h2>
-<ul>
-  {% set ls=data.getSAEObjects() %}
-  {% for sae in ls %}
-  {% set mark=sae.getShortId() %}
-  {% set added=printer.addTemplate('SAE.html',mark,{'sae':sae}) %}
-  <li><a href="{{data.getShortId()|urlencode}}_SAE_{{mark|urlencode}}.html">SAÉ {{sae.getId()}}</a></li>
-  {% endfor %}
-</ul>
-
-
+  Parcours: {{data.getParcoursCanonical(data.getParcoursObjects())}}
 {% for sem in data.getSemestres() %}
-{% for parcours in data.getParcoursObjects(semestre=sem,expanded=True) %}
-<br class="pb" />{% include 'Index-inc.html' %}
-{% endfor %}
-{% endfor %}
-{% for sem in data.getSemestres() %}
-{% for parcours in data.getParcoursObjects(semestre=sem,expanded=True) %}
-<br class="pb" />{% include 'Coeffs-inc.html' %}
-{% endfor %}
-{% endfor %}
-{% for year in data.getYears() %}
-{% for parcours in data.getParcoursObjects(year=year,expanded=True) %}
-{% set comps=data.getPossibleCompObjects(data.getParcoursObjects(year=year,interparcours=parcours),year) %}
-{% for comp in comps %}
-<br class="pb" />{% include 'Matrice-inc.html' %}
-{% endfor %}
-{% endfor %}
-{% endfor %}
-{% set ls=data.getSAEObjects() %}
+{% set ls=data.getSAEObjects(semestre=sem) %}
 {% for sae in ls %}
 <br class="pb" />{% include 'SAE-inc.html' %}
 {% endfor %}
-
-
-
+{% set ls=data.getRessourceObjects(semestre=sem) %}
+{% for ress in ls %}
+<br class="pb" />{% include 'Ressource-inc.html' %}
+{% endfor %}
+{% endfor %}
 {% endblock %}

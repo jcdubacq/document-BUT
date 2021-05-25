@@ -5,10 +5,10 @@
 %% set complettres=['X','A','B','C','D','E','F']
 %% set targets=module.target.values()
 
-\invisiblesubsubsection{SAÉ \VAR{module.id|le}~\emph{\VAR{module.getShortname()|le}}}{%
+\invisiblesubsubsection{Portfolio \VAR{module.id|le}~\emph{\VAR{module.getShortname()|le}}}{%
   \begin{tikzpicture}[remember picture,overlay,baseline=(cornersw.south),
     x=1mm,y=1mm,every node/.style={inner sep=0pt,outer sep=0pt}]
-    %% set header='S.A.É.'
+    %% set header='Portfolio'
     %% set subheader=''
     %% set maintitle=module.getName()
     %% set arianeList=[]
@@ -92,49 +92,5 @@
     \end{pgfonlayer}
     \node [fit=(lastwest)(lasteast)] (cornersw) {};
   \end{tikzpicture}
-}\label{FICHE-\VAR{module.id|le}}\selectparcours{\VAR{module.getParcours().getCanonical()|le}}
-
-%% set exemples=module.model.values()
-%% for ex in exemples
-\begin{tikzpicture}[remember picture,overlay,baseline=(cornersw.south),
-  x=1mm,y=1mm,every node/.style={inner sep=0pt,outer sep=0pt}]
-  %% set header='S.A.É.'
-  %% set subheader='Exemple'
-  %% set maintitle='Exemple '+ex.number+' : '+ex.getName()
-  %% set arianeList=[]
-  %% set arianeEnd='Exemple '+ex.number
-  %% for comp in targets 
-  %% if arianeList.append(['Compétence '+comp.number+' : '+comp.getShortname(),module.getShortname()])
-  %% endif
-  %% endfor
-  %% include 'TitleFragment.tex'
-  
-  \node[inner sep=2mm,rounded corners=2mm,%
-  line width=.5mm,draw=blacktextcolor,%
-  text width={\xmarkzero},anchor=north west] (exemple) at (lastwest) {%
-    \VAR{ex.synopsis|le|join('\n\n')}
-    
-    %% if ex.format|length > 0
-    %% if ex.format|length > 6
-    {\emph{Formats pédagogiques :} \VAR{ex.format|le}}\par
-    %% else
-    {\emph{Format pédagogique :} \VAR{ex.format|le}}\par
-    %% endif
-    %% endif
-
-    
-    %% if ex.objective|length > 0
-    \textbf{Problématique professionnelle~:} \VAR{ex.objective|join('\n\n')|le}\par
-    %% endif
-
-    
-    %% if ex.evaluation|length > 0
-    \textbf{Préconisations d'évaluation~:} \VAR{ex.evaluation|join('\n\n')|le}\par
-    %% endif
-  };   
-  \node [outer sep=2mm,fit=(exemple)] (cornersw) {};
-\end{tikzpicture}
-
-
-
-%% endfor
+}\label{FICHE-\VAR{module.id|le}}
+\selectparcours{\VAR{module.getParcours().getCanonical()|le}}

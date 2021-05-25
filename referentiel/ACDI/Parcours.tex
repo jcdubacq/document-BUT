@@ -1,0 +1,144 @@
+% # context: data,utils,parcours
+\selectparcours{\VAR{parcours.getCanonical(lower=False)|le}}
+\subsubsection{\VAR{parcours.getCanonical(lower=False)|le} «~\VAR{parcours.getName()|le}~»}
+\begin{tikzpicture}[remember picture, overlay,baseline=(cornersw.south),
+  x=1mm,y=1mm,every node/.style={inner sep=0pt,outer sep=0pt}]
+  \coordinate (start) at (0,0);
+  \coordinate (NW) at (start-|current page.north west);
+  \coordinate (NE) at (start-|current page.north east);
+  \coordinate (NWi) at ($ (NW)+(10,0) $);
+  \coordinate (NEi) at ($ (NE)+(-10,0) $);
+  %% set a=[]
+  %% set possiblecomps=parcours.getCompLevel()|sort(attribute='id')
+  %% for comp in possiblecomps:
+  %% if a.append(comp.parent)
+  %% endif
+  %% endfor
+  %% set comps=a|unique|sort(attribute='id')
+  \coordinate (last) at ($ (NWi)+(2,4) $);
+  %% for comp in comps
+  %% set cn=comp.number|int
+  %% if cn<0
+  %% set cn=0
+  %% endif
+  %% if complettres|length <= cn
+  %% set cn=0
+  %% endif
+  %% set cl=complettres[cn]
+  \node[align=flush center,
+  anchor=north west,
+  text width=186mm,
+  text=comp\VAR{cl}pcolor
+  ] (title\VAR{comp.number|le}) at ($ (last)+(0,-6) $) {\normalfont\large\bfseries
+    Compétence \VAR{comp.number|le} : \VAR{comp.getName()|le}
+  };
+  \coordinate (last) at (title\VAR{comp.number|le}.south west);
+  %% for level in [1,2,3]
+  %% set gradientletters=['C','B','']
+  %% set gradientletter=gradientletters[level-1]
+  %% set levelstr=level|string
+  %% set distance=63.3333333333*(level-1)
+  %% for subcomp in comp.subcomp.values() if subcomp.level==levelstr and subcomp in possiblecomps
+  \node[align=flush left,anchor=north west,
+  text=comp\VAR{cl}pcolor\VAR{gradientletter},
+  text width=59.33333333mm,
+  ] (comp\VAR{levelstr}) at ($ (last)+(\VAR{distance},-6) $) {%
+    \begin{hyphenrules}{nohyphenation}%
+      \sloppy%
+      \VAR{subcomp.name|le}%
+    \end{hyphenrules}\\
+    \hfill UE\VAR{level*2-1}.\VAR{comp.number|le}
+    \hfill UE\VAR{level*2}.\VAR{comp.number|le}
+    \hfill\null
+  };
+  %% else
+  \coordinate (comp\VAR{levelstr}) at ($ (last)+(\VAR{distance},-6) $);
+  %% endfor
+  %% endfor
+  \node [fit=(comp1)(comp2)(comp3)] (subcompbloc) {};
+  \coordinate (last) at (subcompbloc.south west);
+  \begin{pgfonlayer}{bg}
+    \coordinate(nw) at ($ (title\VAR{comp.number|le}.north west)+(-2,2) $);
+    \coordinate(se) at ($ (title\VAR{comp.number|le}.south east)+(2,-2) $);
+    \node[
+    fill=comp\VAR{cl}color,
+    draw=\comp\VAR{cl}colord,
+    fit=(nw) (se),
+    ] (toptitle) {};
+    %% set subcomps=comp.subcomp.values()|sort(attribute='level')
+    %% for subcomp in subcomps if subcomp in possiblecomps
+    %% set level=subcomp.level|int
+    %% set gradientletters=['C','B','']
+    %% set gradientletter=gradientletters[level-1]
+    \coordinate (nw) at ($ (comp\VAR{level}.north west)+(-2,2) $);
+    \coordinate (se) at ($ (comp\VAR{level}.south east|-subcompbloc.south)+(2,-2) $);
+    \path [
+    draw=\comp\VAR{cl}color\VAR{gradientletter}d,
+    fill=comp\VAR{cl}color\VAR{gradientletter},
+    thin] (nw)%
+    %% if not loop.first
+    --++(-2,0)--($ .5*(nw)+.5*(se-|nw)+(2,0) $)--($ (se-|nw)+(-2,0) $)
+    %% endif
+    --(se-|nw)
+    %% if not loop.last
+    --($ (se)+(-2,0) $)--($ .5*(se)+.5*(se|-nw)+(2,0) $)--($ (se|-nw)+(-2,0) $)
+    %% else
+    --(se)--(se|-nw)
+    %% endif
+    --cycle;
+    %% endfor
+  \end{pgfonlayer}
+  %% endfor
+  %% for level in [1,2,3]
+  %% set levelstr=level|string
+  %% set distance=63.3333333333*(level-1)-2
+  \node[align=flush center,anchor=north west,
+  text width=63.33333333mm,
+  ] (years) at ($ (last)+(\VAR{distance},-5) $) {%
+    \begin{hyphenrules}{nohyphenation}%
+      \textcolor{blacktextcolor}{Année \VAR{level}}
+    \end{hyphenrules}
+  };
+  \draw [
+  thick,
+  decoration={
+    mirror,
+    brace,
+    raise=-2mm
+  },
+  decorate
+  ] ($ (years.north west)+(2,0) $)--($ (years.north east)+(-2,0) $);
+  %% endfor
+  \coordinate (cornernw) at (NWi|-bloc.north);
+  \coordinate (cornersw) at ($ (NWi|-years.south)+(0,-2) $);
+\end{tikzpicture}%
+
+
+%% macro jobslist(joblist,command)
+%% set lj=[]
+%% for j in joblist
+%% set jj=j[0]|lower
+%% set jle=(jj+j[1:])|le
+%% if jj in ['a','e','i','o','u'] or (jj=='h' and j[0:3]!='hau')
+%% if lj.append("d'\\"+command+'{'+jj+j[1:]+'}')
+%% endif
+%% else
+%% if lj.append("de \\"+command+"{"+jj+j[1:]+'}')
+%% endif
+%% endif
+%% endfor
+%% if lj|length>1
+aux métiers \VAR{lj|elegantjoin}%
+%% else
+au métier \VAR{lj|elegantjoin}%
+%% endif
+%% endmacro
+
+Ce parcours forme en particulier \VAR{jobslist(parcours.job,'textbf')}%
+%% if parcours.jobsecondary|length>0
+, mais aussi éventuellement \VAR{jobslist(parcours.jobsecondary,'emph')}.
+%% else
+.
+%% endif
+Après quelques années, il est aussi possible d'accéder \VAR{jobslist(parcours.jobsenior,'emph')}.
+

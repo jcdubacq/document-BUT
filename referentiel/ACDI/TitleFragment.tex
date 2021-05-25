@@ -1,0 +1,63 @@
+\coordinate (start) at (0,-20);
+\compareytozero{($ (start)-(current page.north west)+(0,66) $)}{%
+  \coordinate (start) at (0,-10);
+}{}%
+\coordinate (NW) at (start-|current page.north west);
+\coordinate (NE) at (start-|current page.north east);
+\coordinate (NWi) at ($ (NW)+(\VAR{margin},0) $);
+\coordinate (NEi) at ($ (NE)+(-\VAR{margin},0) $);
+\coordinate (mark5) at ($ 1/2*(NWi)+1/2*(NEi)+1/2*(-10,0) $);
+\path ($ (mark5)-(NWi) $);\pgfgetlastxy{\xmarkfive}{\ymarkfive};
+\coordinate (mark4) at ($ 2/3*(NWi)+1/3*(NEi)+1/3*(-16,0) $);
+\coordinate (mark6) at ($ 1/3*(NWi)+2/3*(NEi)+1/3*(-14,0) $);
+\coordinate (mark0) at ($ (NEi)+(-4,0) $);
+\path ($ (mark0)-(NWi) $);\pgfgetlastxy{\xmarkzero}{\ymarkzero};
+\compareytozero{($ (start)-(current page.north west)+(0,66) $)}{%
+  \draw[black,line width=1mm] ($ (start-|NW) $)--(start-|NE);
+  \draw[black,line width=1mm] ($ (start-|NW)+(0,10) $)--($ (start-|NE)+(0,10) $);
+  \coordinate (bigtitle) at (start);
+}{%
+  \draw[black,line width=1mm] (start-|NW)--(start-|NWi);
+  \draw[black,line width=1mm] ($ (start-|NW)+(0,10) $)--($ (start-|NWi)+(0,10) $);
+  \node[draw,black,fill=blackpagecolor,text=whitetextcolor,draw=blacktextcolor,rounded corners=5mm,text width=30mm,minimum height=30mm,anchor=south west,inner sep=0pt,outer sep=0pt] (bigtitle) at ($ (start-|NWi)+(0,-10) $) {\centering\large\selectfont%
+    %% if subheader|length>0
+    \smash{\raisebox{2.5ex}{\clap{\VAR{subheader|le}}}}%
+    %% endif
+    \Large\bfseries\selectfont%
+    \clap{\VAR{header|le}}\\\vspace*{2mm}\fontsize{32}{32}\bfseries\selectfont \VAR{module.id|le}};
+  \draw[black,line width=1mm] ($ (start-|NWi)+(30,0) $)--(start-|NE);
+  \draw[black,line width=1mm] ($ (start-|NWi)+(30,10) $)--($ (start-|NE)+(0,10) $);
+}
+\node[anchor=west,color=blacktextemphcolor,text height=3ex,text depth=1ex] at ($ (start-|NWi)+(32,5) $) {\normalfont\fontsize{13}{13}\bfseries\color{blacktextemphcolor}\VAR{maintitle|le}};
+\coordinate (last) at (NEi|-start);
+% 
+% Breadcrumbs
+% 
+%% for ariane in arianeList
+\node[anchor=north east] (ariane) at ($ (last)+(0,-1) $) {%
+  \normalfont\fontsize{9}{9}\bfseries\color{blacktextdimmedcolor}%
+  %% for piece in ariane
+  \VAR{piece|le}
+  %% if loop.last
+  \color{blacktextdimmedcolor!50!whitepagecolor}
+  %% endif
+  >
+  %% else
+  \color{blacktextdimmedcolor!50!whitepagecolor}    
+  %% endfor
+  \VAR{arianeEnd|le}%
+};
+\coordinate (last) at (ariane.south east);
+%% endfor
+\coordinate (arianesouth) at (last);
+\compareytozero{($ (start)-(current page.north west)+(0,66) $)}{%
+}{
+  %% include 'Fresco.tex'
+}
+% 
+% Boxes
+% 
+\node[fit=(bigtitle.south)(arianesouth)] (bottom) {};
+\coordinate (last) at ($ (bottom.south)+(0,-2) $);
+\coordinate (lasteast) at (last-|NEi);
+\coordinate (lastwest) at (last-|NWi);

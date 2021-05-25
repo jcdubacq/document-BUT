@@ -85,7 +85,8 @@
     \midrule
     %% for c in comps
     %% set ue=c.getUE(semestre=sem)
-    \textbf{C\VAR{c.parent.number|le}}& \VAR{c.parent.getName()|le} &
+    \hyperref[FICHE-\VAR{c.id|le}]{\textbf{C\VAR{c.parent.number|le}}}&
+    \hyperref[FICHE-\VAR{c.id|le}]{\VAR{c.parent.getName()|le}} &
     UE\VAR{sem|le}.\VAR{c.parent.number|le}
     %% set outerloop=loop
     %% for t in total
@@ -93,7 +94,7 @@
     %% endfor
     & \VAR{ue.ects|le}\\
     &
-    \multicolumn{6}{@{\hspace{2pt}}l}{\small\emph{\VAR{c.getName()|le}}}\\
+    \multicolumn{6}{@{\hspace{2pt}}l}{\small\emph{\hyperref[FICHE-\VAR{c.id|le}]{\VAR{c.getName()|le}}}}\\
     %% endfor
     \bottomrule
   \end{tabular}

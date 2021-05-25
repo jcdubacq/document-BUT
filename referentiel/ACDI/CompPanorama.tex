@@ -1,0 +1,220 @@
+%% for comp in data.comp.values()|sort(attribute='number')
+%% set cn=comp.number|int
+%% if cn<0
+%% set cn=0
+%% endif
+%% if complettres|length <= cn
+%% set cn=0
+%% endif
+%% set cl=complettres[cn]
+
+\invisiblesubsubsection{Compétence \VAR{comp.number|le} : \VAR{comp.getName()|le}}{
+\begin{tikzpicture}[remember picture, overlay,baseline=(cornersw.south),
+  x=1mm,y=1mm,every node/.style={inner sep=0pt,outer sep=0pt}]
+  \coordinate (start) at (0,0);
+  \coordinate (NW) at (start-|current page.north west);
+  \coordinate (NE) at (start-|current page.north east);
+  \coordinate (NWi) at ($ (NW)+(\VAR{margin},0)+(2,0) $);
+  \coordinate (NEi) at ($ (NE)+(-\VAR{margin},0)+(-2,0) $);
+  \node[align=flush center,
+  anchor=north west,
+  text width=186mm,
+  text=comp\VAR{cl}pcolor
+  ] (title) at ($ (NWi)+(0,-2) $) {\normalfont\large\bfseries
+    Compétence \VAR{comp.number|le} : \VAR{comp.getName()|le}
+  };
+  \node[anchor=north west,text width=186mm,
+  text=comp\VAR{cl}pcolorB
+  ] (activite) at ($ (title.south west)+(0,-6) $) {
+    %% for p in comp.description
+    {
+      %% if loop.first
+      \itshape
+      %% else
+      \small
+      %% endif
+      \VAR{p|le}
+    }\par
+    %% endfor
+  };
+  \node[anchor=north west,text width=100mm,
+  text=comp\VAR{cl}pcolorB
+  ] (compo) at ($ (activite.south west)+(0,0) $) {
+    %% for p in comp.component
+    %% if loop.first
+    \begin{itemize}[topsep=0pt,label=\textitemize,leftmargin=1pc,labelsep=*]
+      %% endif
+    \item en \VAR{p|le}
+      %% if loop.last
+    \end{itemize}
+    %% endif      
+    %% endfor
+  };
+  \node[anchor=north east,text width=80mm,
+  text=comp\VAR{cl}pcolorC
+  ] (sitpro) at ($ (activite.south east)+(0,-6) $) {
+    %% for p in comp.context
+    %% if loop.first
+    \textbf{Situations professionnelles}
+    \begin{itemize}[topsep=0pt,label=\textitemize,leftmargin=1pc,labelsep=*]
+      %% endif
+    \item \VAR{p|le}
+      %% if loop.last
+    \end{itemize}
+    %% endif      
+    %% endfor
+  };
+  \node[fit=(compo)(sitpro)] (bloc) {};
+  \coordinate (last) at ($ (NWi|-bloc.south)+(0,-6) $);
+  %% for subcomp in comp.subcomp.values()
+  %% set level=subcomp.level|int
+  %% set gradientletters=['C','B','']
+  %% set gradientletter=gradientletters[level-1]
+  %% set levelstr=level|string
+  \node[align=flush center,
+  anchor=north west,
+  text width=60mm,
+  text=comp\VAR{cl}pcolor\VAR{gradientletter}
+  ] (xsublevel\VAR{subcomp.level|le}) at (last) {
+    \begin{hyphenrules}{nohyphenation}%
+      \normalfont\large\bfseries
+      \VAR{subcomp.getName()|le}
+    \end{hyphenrules}\par
+    \normalfont\itshape\normalsize\selectfont \VAR{subcomp.getParcours().getCanonical(short=true)|le}
+  };
+  \node[align=flush left,
+  anchor=north west,
+  text width=120mm,
+  text=comp\VAR{cl}pcolor\VAR{gradientletter}
+  ] (xsublevelac\VAR{subcomp.level|le}) at ($ (last)+(66,0) $) {\normalfont
+    %% for ac in subcomp.ac.values()
+    %% if loop.first
+    \begin{description}[topsep=0pt,style=standard,leftmargin=!,labelwidth=\widthof{\textbf{AC 0}}]
+      %% endif
+    \item[AC \VAR{ac.num|le}]\VAR{ac.getName()|le}\par
+      %% if loop.last
+    \end{description}
+    %% endif      
+    %% endfor
+  };
+  \node[fit=(xsublevel\VAR{subcomp.level|le})(xsublevelac\VAR{subcomp.level|le})] (block\VAR{subcomp.level|le}) {};
+  \node[fit=(xsublevel\VAR{subcomp.level|le})(xsublevel\VAR{subcomp.level|le}.south|-block\VAR{subcomp.level|le}.south)] (sublevel\VAR{subcomp.level|le}) {};
+  \node[fit=(xsublevelac\VAR{subcomp.level|le})(xsublevelac\VAR{subcomp.level|le}.south|-block\VAR{subcomp.level|le}.south)] (sublevelac\VAR{subcomp.level|le}) {};
+  \coordinate (last) at ($ (block\VAR{subcomp.level|le}.south west)+(0,-11) $);
+  %% endfor
+
+
+  \begin{pgfonlayer}{bg}
+    \coordinate(nw) at ($ (title.north west)+(-2,2) $);
+    \coordinate(se) at ($ (title.south east)+(2,-2) $);
+    \node[
+    fill=comp\VAR{cl}color,
+    draw=\comp\VAR{cl}colord,
+    fit=(nw) (se),
+    blur shadow={shadow blur steps=5}%
+    ] (toptitle) {};
+    
+    \coordinate(nw) at ($ (activite.north west)+(-2,2) $);
+    \coordinate(se) at ($ (activite.south east)+(2,-2) $);
+    \node[
+    fill=comp\VAR{cl}colorB,
+    fit=(nw) (se),
+    blur shadow={shadow blur steps=5}%
+    ] (bottomtitlea) {};
+    \coordinate(nw) at ($ (compo.north west)+(-2,0) $);
+    \coordinate(se) at ($ (compo.south east|-bloc.south)+(2,-2) $);
+    \node[
+    fill=comp\VAR{cl}colorB,
+    fit=(nw) (se),
+    blur shadow={shadow blur steps=5}%
+    ] (bottomtitleb) {};
+    \coordinate(nw) at ($ (activite.north west)+(-2,2) $);
+    \coordinate(se) at ($ (activite.south east)+(2,-2) $);
+    \node[
+    fill=comp\VAR{cl}colorB,
+    fit=(nw) (se),
+    ] (bottomtitlec) {};
+
+    \path [
+    fill=comp\VAR{cl}colorB,
+    draw=\comp\VAR{cl}colorBd,
+    ] (bottomtitleb.south east)|-(bottomtitlea.south east)|-(bottomtitlea.north west)|-cycle;
+    
+    \coordinate(nw) at ($ (sitpro.north west)+(-2,2) $);
+    \coordinate(se) at ($ (sitpro.south east|-bloc.south)+(2,-2) $);
+    \node[
+    fill=comp\VAR{cl}colorC,
+    draw=\comp\VAR{cl}colord,
+    fit=(nw) (se),
+    blur shadow={shadow blur steps=5}%
+    ] (bottomtitle) {};
+    %% for subcomp in comp.subcomp.values()
+    %% set level=subcomp.level|int
+    %% set gradientletters=['C','B','']
+    %% set gradientletter=gradientletters[level-1]
+    %% set levelstr=level|string
+    \coordinate (topnw) at ($ (block\VAR{subcomp.level|le}.north west)+(-2,
+    %% if loop.first
+    2
+    %% else
+    7
+    %% endif
+    ) $);
+    \coordinate (topse) at ($ (block\VAR{subcomp.level|le}.south east-|sublevel\VAR{subcomp.level|le}.north east)+(2,
+    %% if loop.last
+    -2
+    %% else
+    -2
+    %% endif
+    ) $);
+    \coordinate (topne) at (topnw-|topse);
+    \coordinate (topsw) at (topnw|-topse);
+    \coordinate (tops) at ($ .5*(topse)+.5*(topsw)+(0,
+    %% if loop.last
+    0
+    %% else
+    -5
+    %% endif
+    ) $);
+    \coordinate (topn) at ($ .5*(topne)+.5*(topnw)+(0,
+    %% if loop.first
+    0
+    %% else
+    -5
+    %% endif
+    ) $);
+    \fill [
+    fill=comp\VAR{cl}color\VAR{gradientletter},
+    draw=\comp\VAR{cl}color\VAR{gradientletter}d,
+    ] (topnw)--(topn)--(topne)--(topse)--(tops)--(topsw)--cycle;
+    \coordinate(nw) at ($ (sublevelac\VAR{subcomp.level|le}.north west|-topnw)+(-2,0) $);
+    \coordinate(se) at ($ (sublevelac\VAR{subcomp.level|le}.south east|-topse)+(2,0) $);
+    \node[
+    fill=comp\VAR{cl}color\VAR{gradientletter},
+    draw=\comp\VAR{cl}color\VAR{gradientletter}d,
+    fit=(nw) (se),
+    ] (toptitle) {};
+    %% endfor
+  \end{pgfonlayer}
+  \coordinate (cornernw) at (NWi|-toptitle.north);
+  \coordinate (cornersw) at ($ (NWi|-last)+(0,-4) $);
+\end{tikzpicture}}%
+\BLOCK{for subcomp in comp.subcomp.values()}\label{FICHE-\VAR{subcomp.id}}\BLOCK{endfor}
+
+
+
+%% endfor
+
+\bigskip
+Une \textbf{compétence} est un «~\textbf{savoir-agir complexe}, prenant appui sur la
+mobilisation et la combinaison efficaces d’une variété de ressources à
+l’intérieur d’une famille de situations~»~(Tardif, 2006). Les ressources
+désignent ici les savoirs, savoir-faire et savoir-être dont dispose un
+individu, et qui lui permettent de mettre en œuvre la compétence.
+
+Les \textbf{situations professionnelles} réfèrent aux contextes dans lesquels les
+compétences sont mises en jeu. Ces situations varient selon la
+compétence ciblée.
+
+Les niveaux de chaque compétence forment peuvent, selon le type de
+B.U.T. proposé, être constitutifs de un, plusieurs ou tous les parcours.

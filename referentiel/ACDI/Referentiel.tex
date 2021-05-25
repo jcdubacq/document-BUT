@@ -1,138 +1,26 @@
 \documentclass[10pt]{article}
 
-% All encoding stuff
-\usepackage[LUC,T2A,T1]{fontenc}%
-\usepackage[verbose]{newunicodechar}
-\usepackage{fontspec}
-\usepackage[T1]{fontenc}
-\usepackage{textcomp}
+%% set margin=printer.margin
+%% set layout=printer.layout
+%% set color=printer.color
+%% include 'packages.tex'
 
-% Drawing stuff
-\usepackage[usenames,dvipsnames]{xcolor}
-\usepackage[prefix=sol-]{xcolor-solarized}
-\usepackage{tikz}%
-\usetikzlibrary{tikzmark,calc,fit,shapes,shapes.misc,arrows,shadows.blur}%
-\usepackage{tcolorbox}
-\usepackage{graphicx}
-\usepackage{pdfpages}
-\pgfdeclarelayer{bg}    % declare background layer
-\pgfsetlayers{bg,main}
-
-%% include 'Color.tex'
-
-
-% Typography stuff
-\usepackage{geometry}
-\usepackage[headings]{fancyhdr}
-\usepackage{dcolumn,colortbl}
-\usepackage{soul} % better underline \ul
-\setuldepth{Berlin} % no descending to imitate word
-
-% Linking stuff
-
-\usepackage{hyperref,bookmark}
-\hypersetup{%
-  colorlinks,
-  urlcolor=blacktextemphcolor,
-  linkcolor=blacktextcolor
-}
-
-% Pure LaTeX stuff
-
-\usepackage{ifthen}
-\usepackage{tabularx,multirow,booktabs,ragged2e}
-\usepackage{colortbl}%
-\usepackage[french]{babel}
-\usepackage{enumitem,xspace}
-\newcommand\samebox[2]{%
-  \makebox[\widthof{#1}][r]{#2}%
-}
-
-\newlength{\mywidth}
-\newcommand{\resetwidth}{\setlength{\mywidth}{0pt}}
-\newcommand{\maxwidth}[1]{\setlength{\mywidth}{\maxof{\mywidth}{\widthof{#1}}}}
-\newcommand{\rothead}[1]{\rotatebox[origin=l]{90}{\parbox{\mywidth}{#1}}}
-
-\newcommand{\compareytozero}[3]{\path #1;\pgfgetlastxy{\xdelta}{\ydelta};\ifdim\ydelta<0pt#2\else#3\fi}
-\setcounter{tocdepth}{2}
-\newcolumntype{H}{r}
-
-% Unused stuff
-% \usepackage[utf8x]{inputenc}%
-% \usepackage{etoolbox}
-% \usepackage[scale=.5,text=DOCUMENT~DE~TRAVAIL]{draftwatermark}
-
-% Typographic settings
-
-\makeatletter
-\newcommand\HUGE{\@setfontsize\Large{32pt}{40}}
-\renewcommand\Huge{\@setfontsize\Large{24pt}{30}}
-\renewcommand\LARGE{\@setfontsize\Large{16pt}{20}}
-\renewcommand\Large{\@setfontsize\Large{13pt}{16}}
-\renewcommand\large{\@setfontsize\Large{11pt}{13}}
-\renewcommand\normalsize{\@setfontsize\Large{10pt}{12}}
-\renewcommand\small{\@setfontsize\Large{9pt}{11}}
-\renewcommand\footnotesize{\@setfontsize\Large{8pt}{9}}
-\makeatother
-
-\geometry{a4paper,left=10mm,right=10mm,top=25 mm,bottom=25mm}
-\setmainfont{Arial}
-\makeatletter
-\newunicodechar{«}{\fontspec{Arial}\char"00AB\FB@guillspace\ignorespaces}
-\newunicodechar{»}{\unskip\FB@guillspace\fontspec{Arial}\char"00BB}
-\newunicodechar{©}{\fontspec{Arial}\char"00A9\unskip\,}
-\makeatother
-\setlength{\parindent}{0pt}
-\setlength{\tabcolsep}{2mm}\setlength{\arrayrulewidth}{.2mm}
-
-\pagestyle{headings}
-\renewcommand{\sectionmark}[1]{%
-  \gdef\currsection{#1}%
-}
-\renewcommand{\subsectionmark}[1]{%
-  \markright{\currsection\ \textbullet\ #1}%
-}
-\def\fancy{%
-  \fancyhf{}%
-  \fancyhead[L]{\small\emph{\rightmark}}%
-  \fancyhead[R]{\thepage}%
-  \fancyfoot[L]{\textcolor{blacktextdimmedcolor}{©~\VAR{data.author|le}}\\%
-    \href{\VAR{data.url|le}}{\ul{\VAR{data.url|le}}}}%
-  \fancyfoot[R]{\textcolor{blacktextdimmedcolor}{\VAR{data.version|le}\\\VAR{data.getName()|le} (\leparcours)}}%
-}
-\fancy
-
-\renewcommand{\headrulewidth}{0pt}
-
-\newcommand{\selectallparcours}{\def\leparcours{\VAR{data.getParcours().getCanonical()|le}}}
-\newcommand{\selectparcours}[1]{\gdef\leparcours{#1}}
-\selectallparcours
-
-% Only three sizes of titles (including normalsize)
-\usepackage{titlesec}
-\renewcommand\thesection{\Alph{section}}
-\renewcommand\thesubsection{\arabic{subsection}}
-\renewcommand\thesubsubsection{\arabic{subsubsection}}
-\newcommand\invisiblesubsubsection[1]{\refstepcounter{subsubsection}  \addcontentsline{toc}{subsubsection}{\protect\numberline{\thesubsubsection}#1} \subsubsectionmark{#1}}
-
-\titleformat{\section}{\normalfont\LARGE\bfseries\color{blacktextemphcolor}}%
-{\tcbox[colback=blackpagecolor, colframe=blackpagecolor, coltext=whitetextdimmedcolor, on line, boxsep=0pt, left=4pt, right=4pt, top=4pt, bottom=4pt]{\textcolor{whitetextcolor}{\thesection}}}{0.4em}{}
-\titleformat{\subsection}{\normalfont\Large\bfseries\color{blacktextemphcolor}}%
-{\tcbox[colback=blackpagecolor, colframe=blackpagecolor, coltext=whitetextdimmedcolor, on line, boxsep=0pt, left=4pt, right=4pt, top=4pt, bottom=4pt]{\thesection.\textcolor{whitetextcolor}{\thesubsection}}}{0.4em}{}
-\titleformat{\subsubsection}{\normalfont\large\bfseries\color{blacktextemphcolor}}%
-{\tcbox[colback=blackpagecolor, colframe=blackpagecolor, coltext=whitetextdimmedcolor, on line, boxsep=0pt, left=4pt, right=4pt, top=4pt, bottom=4pt]{\thesection.\thesubsection.{\normalsize\selectfont\textcolor{whitetextcolor}{\thesubsubsection}}}}{0.4em}{}
-
-\newcommand{\textitemize}{–\xspace}
-\newcommand{\textitemizesecondary}{\textbullet\xspace}
+%% set complettres=['X','A','B','C','D','E','F']
+%% set services=["CJ", "CS", "GACO", "GEA", "GLT", "INFOCOM", "STID", "TD"]
+%% if data.id|upper in services
+%% set dpttertiaire=True
+%% else
+%% set dpttertiaire=False
+%% endif
 
 \begin{document}
 %% include 'Cover.tex'
 \newpage
 \section[Présentation générale]{Présentation générale de la spécialité et des parcours}
-Ce document présente le programme national du B.U.T \VAR{data.name|le}
-et complète l’annexe 1 de l’arrêté relatif aux programmes nationaux de
-la licence professionnelle-bachelor universitaire de technologie.
-
+Ce document présente une proposition complète de programme national du
+B.U.T \VAR{data.name|le} et complète les publications des annexes de
+l'arrêté relatif aux programmes nationaux de la licence professionnelle
+— bachelor universitaire de technologie.
 
 %% for paragraph in data.introtxt
 \VAR{paragraph|le}
@@ -143,15 +31,341 @@ la licence professionnelle-bachelor universitaire de technologie.
 \subsection*{\VAR{parc.getCanonical(lower=False)|le} «~\VAR{parc.getName()|le}~»}
 %% for paragraph in parc.introtxt
 \VAR{paragraph|le}
+%% endfor
+%% endfor
 
+\subsection[Architecture du diplôme]{Architecture du diplôme}
+Le bachelor universitaire de technologie est défini par une spécialité
+et un parcours. La spécialité \VAR{data.getName()|le} de bachelor
+universitaire de technologie propose \VAR{data.parcours|length}
+parcours.
+
+Un parcours définit précisément un cursus de bachelor universitaire de technologie au sein d’une
+spécialité donnée. Il vise un champ d’activité, une famille de métiers identifiés et répond à des
+enjeux d’individualisation en lien avec le projet personnel et professionnel.
+
+Il est certifié par 4 à 6 blocs de compétences, aussi dénommés « compétences finales » dans
+l’approche par compétences et entendues comme des « savoirs agir complexes » mis en œuvre
+dans un contexte professionnel et qui mobilisent et combinent des ressources acquises au cours du
+cursus. Chaque bloc de compétences est décliné par niveau tout au long du parcours.
+
+\subsection{Taille des groupes}
+Les groupes sont de
+%% if dpttertiaire
+26
+%% else
+28
+%% endif
+personnes en Travaux Dirigés (TD) et
+%% if dpttertiaire
+13
+%% else
+14
+%% endif
+en Travaux Pratiques (TP).
+
+Le référentiel de formation identifie les TP présentant un risque pour la sécurité des personnes et
+nécessitant un encadrement particulier.
+
+\subsection{Évaluation interne des formations}
+Chaque département de l’IUT met en place un conseil de perfectionnement
+conformément aux statuts de son établissement. Dans une logique
+d’amélioration continue, le conseil de perfectionnement examine une fois
+par an les indicateurs du bachelor universitaire de technologie de la
+spécialité, notamment les résultats des évaluations des formations et
+des enseignements par les personnes qui les ont suivis, les suivis de
+cohortes, la qualité des stages et le suivi de l’insertion
+professionnelle.
+
+Le Conseil de l’IUT est ensuite informé de l’ensemble des évaluations
+internes des départements.
+
+\newpage
+\section{Référentiel d'activités et de compétences}
+
+\subsection{Les compétences}
+
+%% include 'CompPanorama.tex'
+
+\newpage
+\subsection{Détail des parcours}
+%% for parcours in data.parcours.values()|sort(attribute='id')
+%% include 'Parcours.tex'
 %% endfor
-%% endfor
+
 
 \selectallparcours
 \newpage
 \section{Référentiel de formation}
+\subsection{Cadre général}
+Le bachelor universitaire de technologie est organisé en 6 semestres
+composés d’unités d’enseignement (UE) et chaque niveau de développement
+des compétences se déploie sur les deux semestres d’une même année.
+
+Les UE et les compétences sont mises en correspondance. Chaque UE se
+réfère à une compétence finale et à un niveau de cette compétence. Elle
+est nommée par le numéro du semestre et celui de la compétence finale.
+
+Chaque unité d’enseignement est composée de deux éléments constitutifs :
+\begin{itemize}
+\item un pôle «~Ressources~», qui permet l’acquisition des connaissances et méthodes
+fondamentales,
+\item un pôle «~Situation d'apprentissage et d'évaluation~» (SAÉ) qui
+  englobe les mises en situation professionnelle au cours desquelles la
+  compétence se développe et à partir desquelles il sera fait la
+  démonstration de l’acquisition de cette compétence dans la démarche
+  portfolio.
+\end{itemize}
+
+\subsubsection{Les situations d'apprentissage et d'évaluation}
+Les SAÉ permettent l'évaluation en situation de la compétence. Cette
+évaluation est menée en correspondance avec l'ensemble des éléments
+structurants le référentiel, et s'appuie sur la démarche portfolio, à
+savoir une démarche de réflexion et de démonstration portée par la
+personne elle-même.  Parce que cette démarche répond à une problématique
+que l'on retrouve en milieu professionnel, une SAÉ est une tâche
+authentique.
+
+En tant qu'ensemble d'actions, la SAÉ nécessite de la part de la
+personne qui la met en œuvre le choix, la mobilisation et la combinaison
+de ressources pertinentes et cohérentes avec les objectifs ciblés.
+
+L'enjeu d'une SAÉ est ainsi multiple :
+\begin{itemize}
+\item Participer au développement de la compétence ;
+\item Soutenir l'apprentissage et la maîtrise des ressources ;
+\item Intégrer l'autoévaluation ;
+\item Permettre une individualisation des apprentissages.
+\end{itemize}
+
+Au cours des différents semestres de formation, la confrontation à
+plusieurs SAÉ qui permettront de développer et de mettre en œuvre
+chaque niveau de compétence ciblé dans le respect des composantes
+essentielles du référentiel de compétences et en cohérence avec les
+apprentissages critiques.
+
+Les SAÉ peuvent mobiliser des heures issues des
+%% if dpttertiaire
+1800
+%% else
+2000
+%% endif
+h de formation et des 600 h de projet. Les SAÉ prennent la forme de
+dispositifs pédagogiques variés, individuels ou collectifs, organisés
+dans un cadre universitaire ou extérieur, tels que des ateliers, des
+études, des challenges, des séminaires, des immersions au sein d'un
+environnement professionnel, des stages, etc.
+
+\subsubsection{Adaptation locale}
+L’adaptation locale s’entend comme la définition par chaque IUT du contenu et des modalités des
+enseignements. Elle ne peut pas modifier le référentiel de compétences et d’activités et définir,
+notamment, de nouveaux niveaux de compétences ni de nouvelles compétences finales.
+
+L’adaptation locale représente un tiers du volume global des heures d’enseignement, soit
+%% if dpttertiaire
+600
+%% else
+667
+%% endif
+heures d’enseignement pour une spécialité secondaire sur les 3 ans, ou
+600 heures d’enseignement pour une spécialité tertiaire sur les 3
+ans. Elle représente chaque année au maximum 40\% du volume horaire
+d’enseignement de l’année hors projets tutorés.
+
+\subsubsection{Compétences transversales et enjeux sociétaux}
+L’acquisition des connaissances et compétences dans les secteurs
+professionnels et les métiers visés permet d’acquérir aussi des
+compétences transversales et ainsi de développer une pensée critique et
+d’appréhender les concepts et les enjeux de développement durable, de
+mondialisation, d’interculturalité et de transition écologique, de
+responsabilité sociétale, d’éthique, notamment des problématiques liées
+aux situations de handicap, à l’accessibilité et à la conception
+universelle.
+
+La formation intègre un volume d’enseignement d’expression-communication
+et d’au moins une langue étrangère qui participe au développement d’une
+culture communicationnelle et informationnelle ainsi qu’à la maîtrise
+des techniques médiatiques associées, et adaptées notamment à
+l’environnement professionnel de chaque spécialité.
+\subsubsection{Passerelles et paliers d’orientation}
+Une souplesse des dispositifs pédagogiques facilite l’intégration de
+publics post-bac diversifiés ayant des acquis différents à l’entrée en
+formation comme en cours de cursus. Elle permet également de lisser la
+marche de début de cursus pour limiter les échecs en première année.
+
+Dans chaque spécialité, les passerelles entrantes sont prévues sur les
+semestres 3 et 5. Les IUT affichent le nombre de places disponibles pour
+ces entrées latérales et réunissent sous la présidence du directeur, une
+commission d’admission chargée d’étudier les demandes et de préciser le
+contrat pédagogique de l’entrant.
+
+Dans ce processus d’intégration en cours de cursus, une attention
+particulière sera portée à l’accueil des titulaires du BTS et aux
+personnes engagées dans les formations menant au diplôme national de
+licence.
+
+Des paliers d’orientation sont prévus en fin de S1, S2 et de S4
+permettant la mise en œuvre de passerelles vers d’autres formations,
+notamment licences, BTS ou écoles.
+
+\subsubsection{Le projet personnel et professionnel}
+Présent à chaque semestre de la formation et en lien avec les réflexions
+de l'équipe pédagogique, le projet personnel et professionnel est un
+élément structurant qui permet à la personne inscrite en B.U.T. d'agir
+sur sa formation, d'en comprendre et de s'en approprier les contenus,
+les objectifs et les compétences ciblées. Il assure également un
+accompagnement de la personne dans sa propre définition d'une stratégie
+personnelle et dans la construction de son identité professionnelle, en
+cohérence avec les métiers et les situations professionnelles couverts
+par la spécialité « \VAR{data.name|le} » et les parcours
+associés. Enfin, le PPP la prépare à évoluer tout au long de sa vie
+professionnelle, en lui fournissant des méthodes d'analyse et
+d'adaptation aux évolutions de la société, des métiers et des
+compétences.  Par sa dimension personnelle, le PPP vise à :
+\begin{itemize}
+\item Induire un questionnement sur son propre projet et son propre
+  parcours de formation ;
+\item Lui donner les moyens d'intégrer les codes du
+  monde professionnel et socio-économique ;
+\item L'aider à se définir et à se positionner ;
+\item Le guider dans son évolution et son devenir ;
+\item Développer sa capacité d'adaptation.
+\end{itemize}
+Au plan professionnel, le PPP permet :
+\begin{itemize}
+\item Une meilleure appréhension des objectifs de la formation, du
+  référentiel de compétences et du référentiel de formation ;
+\item Une connaissance exhaustive des métiers et perspectives
+  professionnelles spécifiques à la spécialité et ses parcours ;
+\item L'usage contextualisé des méthodes et des outils en lien avec la
+  démarche de recrutement, notamment dans le cadre d'une recherche de
+  contrat d'alternance ou de stage ;
+\item La construction d'une identité professionnelle au travers des
+  expériences de mise en situation professionnelle vécues pendant la
+  formation.
+\end{itemize}
+
+\subsubsection{La démarche portfolio}%
+Nommé parfois portefeuille de compétences ou passeport professionnel, le
+portfolio est un point de connexion entre le monde universitaire et le
+monde socio-économique. En cela, il répond à l'ensemble des dimensions
+de la professionnalisation de la personne inscrite en B.U.T. : de sa
+formation à son devenir en tant que professionnel.
+
+Le portfolio soutient donc le développement des compétences et
+l'individualisation du parcours de formation.  Plus spécifiquement, le
+portfolio offre la possibilité pour elle d'engager une démarche de
+démonstration, de progression, d'évaluation et de valorisation des
+compétences qu'il acquiert tout au long de son cursus.
+
+Quels qu'en soient la forme, l'outil ou le support, le portfolio a pour
+objectif de lui permettre d'adopter une posture réflexive et critique
+vis-à-vis des compétences acquises ou en voie d'acquisition. Au sein du
+portfolio, sa trajectoire de développement est documentée et argumentée
+en mobilisant et analysant des traces, et ainsi en apportant des preuves
+issues de l'ensemble de ses mises en situation professionnelle (SAÉ).
+
+La démarche portfolio est un processus continu d'autoévaluation qui
+nécessite un accompagnement par l'ensemble des membres de l'équipe
+pédagogique. Ceux-ci guident la compréhension des éléments du
+référentiel de compétences, ses modalités d'appropriation, les mises en
+situation correspondantes et les critères d'évaluation.
+
+Parce qu'ils participent tous deux à la professionnalisation et en cela
+sont en dialogue, le PPP et la démarche portfolio ne doivent pourtant
+pas être confondus. Le PPP répond davantage à un objectif
+d'accompagnement qui dépasse le seul cadre des compétences à acquérir,
+alors que la démarche portfolio répond fondamentalement à des enjeux
+d'évaluation des compétences.
+
+
+\subsubsection{Stages}
+Le stage contribue à la professionnalisation et à la validation des
+compétences du Bachelor Universitaire de Technologie. Les stages sont
+répartis selon le calendrier suivant : 8 à 12 semaines les 4 premiers
+semestres ; 12 à 16 semaines la dernière année.
+
+Les CPN décident de la durée et du positionnement des différentes
+périodes de stages en respectant la limite de 22 à 26 semaines de
+l’arrêté. Des dérogations pourront éventuellement être envisagées pour
+les professions réglementées.
+
+L’encadrement des stages est assuré par les membres de l’équipe
+pédagogique en coordination avec l’organisme d’accueil. Cet encadrement
+recouvre en particulier la validation des missions, le suivi régulier du
+stagiaire et son évaluation.
+
+L’encadrement du stage fait l’objet d’une reconnaissance par
+l’établissement notamment au travers du référentiel national
+d’équivalences horaires.
+
+\subsubsection{Projets tutorés}
+D’un volume total de 600 heures, les projets tutorés sont des axes
+structurants de la professionnalisation en tant qu’ils participent de
+l’acquisition des compétences du référentiel du Bachelor Universitaire
+de Technologie et du parcours associé.  En cohérence avec l’approche par
+compétences, les projets tutorés sont des éléments essentiels et
+fondamentaux du pôle « Situation d’Apprentissage et d’Évaluation » (SAÉ)
+des UE de chaque semestre.
+
+Prenant la forme d’activités encadrées par les membres de l’équipe
+pédagogique dont une partie issue du monde socio-économique, les 600h de
+projets tutorés supposent donc une pédagogie innovante et adaptée qui
+s’appuie sur un volume d’heures de formation à hauteur minimale de
+\textbf{75 HETD par an et par groupe de TD}, en complément de celui des
+1800 ou des 2000 heures d’enseignement selon la spécialité.
+
+\subsubsection{Alternance}
+L’alternance peut être réalisée sur l’ensemble de la formation. Elle
+favorise l’insertion professionnelle.
+
+Afin de tenir compte de l’acquisition de compétences en entreprise, les
+maquettes de formation de chaque année en alternance, incluant les
+projets tutorés, sont réduites de 15 à 25% du volume
+horaire global de l’année. Cette diminution peut être appliquée sur les
+enseignements encadrés comme sur les projets. Elle doit être répartie
+sur l’ensemble des semestres du cursus.  Le référentiel de formation
+définit pour chacune des spécialités la valeur du pourcentage de
+réduction du volume horaire annuel dans la fourchette proposée.
+
+Le suivi des alternants est une modalité pédagogique qui est définie par
+le conseil de perfectionnement en accord avec les employeurs et prise en
+compte pour les enseignants dans le cadre du référentiel des
+équivalences horaires voté et appliqué par chaque établissement.
+\subsubsection{Internationalisation}
+
+Pour chaque spécialité des dispositifs d’ouverture à l’international
+et/ou de sensibilisation à l’interculturalité sont mis en œuvre.
+
+\subsubsection{Enseignement à Distance}
+L’enseignement à distance peut être mis en œuvre, soit pour modifier les
+modalités de travail en présentiel, soit pour remplacer l’enseignement
+en présentiel. Dans tous les cas, l’enseignement à distance ne doit pas
+alourdir les horaires d’enseignement reçus au-delà des 33h/semaine.
+
 \subsection{Tableaux horaires}
 \selectallparcours
+Le volume horaire global (enseignement et projets tutorés, soit
+%% if dpttertiarie
+2400
+%% else
+2600
+%% endif
+\unskip) est distribué de manière homogène sur
+les trois années, sans excéder chaque année une moyenne maximum de 33 heures par semaine.
+Les 600 heures de projets tutorés sont réparties sur les trois années, avec chaque année un
+minimum de 150 heures et un maximum de 250 heures ; ces heures sont clairement identifiées
+dans les maquettes de formation et dans les emplois du temps afin de valoriser cette modalité
+pédagogique et d’en assurer le déploiement.
+
+La répartition horaire consacre au moins 
+%% if dpttertiaire
+40\% des heures d'étude (1800 h + 600 h projets)
+%% else
+50\% des heures d'étude (2000 h + 600 h projets)
+%% endif
+aux enseignements pratiques et aux mises en situation professionnelle.
+
 %% for sem in data.getSemestre()
 %% for parcours in data.getParcours(data.getModule(semestre=sem).getParcoursBinBasic())
 %% include 'Horaires.tex'
@@ -180,121 +394,6 @@ la licence professionnelle-bachelor universitaire de technologie.
 %% endfor
 
 \newpage
-\subsection{Cadre général}
-\subsubsection*{Les situations d’apprentissage et d’évaluation}
-Les SAÉ permettent l’évaluation en situation de la compétence. Cette
-évaluation est menée en correspondance avec l’ensemble des éléments
-structurants le référentiel, et s’appuie sur la démarche portfolio, à
-savoir une démarche de réflexion et de démonstration portée par la
-personne elle-même.  Parce que cette démarche répond à une problématique
-que l’on retrouve en milieu professionnel, une SAÉ est une tâche
-authentique.
-
-En tant qu’ensemble d’actions, la SAÉ nécessite de la part de la
-personne qui la met en œuvre le choix, la mobilisation et la combinaison
-de ressources pertinentes et cohérentes avec les objectifs ciblés.
-
-L’enjeu d’une SAÉ est ainsi multiple :
-\begin{itemize}
-\item Participer au développement de la compétence ;
-\item Soutenir l’apprentissage et la maîtrise des ressources ;
-\item Intégrer l’autoévaluation ;
-\item Permettre une individualisation des apprentissages.
-\end{itemize}
-
-Au cours des différents semestres de formation, la confrontation à
-plusieurs SAÉ qui permettront de développer et de mettre en œuvre
-chaque niveau de compétence ciblé dans le respect des composantes
-essentielles du référentiel de compétences et en cohérence avec les
-apprentissages critiques.
-
-%% set services=["CJ", "CS", "GACO", "GEA", "GLT", "INFOCOM", "STID", "TD"]
-Les SAÉ peuvent mobiliser des heures issues des
-%% if data.id|upper in services
-1800
-%% else
-2000
-%% endif
-h de formation et des 600 h de projet. Les SAÉ prennent la forme de
-dispositifs pédagogiques variés, individuels ou collectifs, organisés
-dans un cadre universitaire ou extérieur, tels que des ateliers, des
-études, des challenges, des séminaires, des immersions au sein d’un
-environnement professionnel, des stages, etc.
-
-\subsubsection*{La démarche portfolio}%
-%% for portfolio in data.portfolio.values()
-\label{FICHE-\VAR{portfolio.id|le}}%
-%% endfor
-
-Nommé parfois portefeuille de compétences ou passeport professionnel, le
-portfolio est un point de connexion entre le monde universitaire et le
-monde socio-économique. En cela, il répond à l’ensemble des dimensions
-de la professionnalisation de la personne inscrite en B.U.T. : de sa
-formation à son devenir en tant que professionnel.
-
-Le portfolio soutient donc le développement des compétences et
-l’individualisation du parcours de formation.  Plus spécifiquement, le
-portfolio offre la possibilité pour elle d’engager une démarche de
-démonstration, de progression, d’évaluation et de valorisation des
-compétences qu’il acquiert tout au long de son cursus.
-
-Quels qu’en soient la forme, l’outil ou le support, le portfolio a pour
-objectif de lui permettre d’adopter une posture réflexive et critique
-vis-à-vis des compétences acquises ou en voie d’acquisition. Au sein du
-portfolio, sa trajectoire de développement est documentée et argumentée
-en mobilisant et analysant des traces, et ainsi en apportant des preuves
-issues de l’ensemble de ses mises en situation professionnelle (SAÉ).
-
-La démarche portfolio est un processus continu d’autoévaluation qui
-nécessite un accompagnement par l’ensemble des membres de l’équipe
-pédagogique. Ceux-ci guident la compréhension des éléments du
-référentiel de compétences, ses modalités d’appropriation, les mises en
-situation correspondantes et les critères d’évaluation.
-
-\subsubsection*{Le projet personnel et professionnel}
-Présent à chaque semestre de la formation et en lien avec les réflexions
-de l’équipe pédagogique, le projet personnel et professionnel est un
-élément structurant qui permet à la personne inscrite en B.U.T. d’agir
-sur sa formation, d’en comprendre et de s’en approprier les contenus,
-les objectifs et les compétences ciblées. Il assure également un
-accompagnement de la personne dans sa propre définition d’une stratégie
-personnelle et dans la construction de son identité professionnelle, en
-cohérence avec les métiers et les situations professionnelles couverts
-par la spécialité « \VAR{data.name|le} » et les parcours
-associés. Enfin, le PPP la prépare à évoluer tout au long de sa vie
-professionnelle, en lui fournissant des méthodes d’analyse et
-d’adaptation aux évolutions de la société, des métiers et des
-compétences.  Par sa dimension personnelle, le PPP vise à :
-\begin{itemize}
-\item Induire un questionnement sur son propre projet et son propre
-  parcours de formation ;
-\item Lui donner les moyens d’intégrer les codes du
-  monde professionnel et socio-économique ;
-\item L’aider à se définir et à se positionner ;
-\item Le guider dans son évolution et son devenir ;
-\item Développer sa capacité d’adaptation.
-\end{itemize}
-Au plan professionnel, le PPP permet :
-\begin{itemize}
-\item Une meilleure appréhension des objectifs de la formation, du
-  référentiel de compétences et du référentiel de formation ;
-\item Une connaissance exhaustive des métiers et perspectives
-  professionnelles spécifiques à la spécialité et ses parcours ;
-\item L’usage contextualisé des méthodes et des outils en lien avec la
-  démarche de recrutement, notamment dans le cadre d’une recherche de
-  contrat d’alternance ou de stage ;
-\item La construction d’une identité professionnelle au travers des
-  expériences de mise en situation professionnelle vécues pendant la
-  formation.
-\end{itemize}
-Parce qu’ils participent tous deux à la professionnalisation et en cela
-sont en dialogue, le PPP et la démarche portfolio ne doivent pourtant
-pas être confondus. Le PPP répond davantage à un objectif
-d’accompagnement qui dépasse le seul cadre des compétences à acquérir,
-alors que la démarche portfolio répond fondamentalement à des enjeux
-d’évaluation des compétences.
-
-
 \subsection{Fiches SAÉ et Ressources}
 %% for sem in data.getSemestre()
 %% set ls=data.getModule(onlyType=['SAE'],semestre=sem)
@@ -310,8 +409,12 @@ d’évaluation des compétences.
 %% for sem in data.getSemestre()
 %% set ls=data.getModule(onlyType=['SAE'],semestre=sem)
 %% set lr=data.getModule(onlyType=['RESS'],semestre=sem)
+%% set lp=data.getModule(onlyType=['PORTFOLIO'],semestre=sem)
 %% for module in ls
 %% include 'SAE.tex'
+%% endfor
+%% for module in lp
+%% include 'Portfolio.tex'
 %% endfor
 %% for module in lr
 %% include 'Ressource.tex'
@@ -319,12 +422,101 @@ d’évaluation des compétences.
 %% endfor
 
 \section{Dispositions particulières}
-Non-applicable.
-\section{Référentiel d’évaluation}
-Les dispositions relatives à l’évaluation sont décrites dans l’annexe 1
-de l’arrêté relatif aux programmes nationaux de la licence
-professionnelle-bachelor universitaire de technologie.
-\newpage
-\tableofcontents
+\subsection{L'alternance}
+Le diplôme de B.U.T Informatique, quand il est préparé en alternance,
+s’appuie sur le même référentiel de compétences et le même
+référentiel de formation mais le volume horaire global de chaque
+semestre sera réduit de 15\% en première année, de 20\% en
+deuxième année et de 15\% en troisième année.
+
+\section[Référentiel d'évaluation]{Référentiel d'évaluation}
+
+\subsection{Contrôle continu}
+Les unités d'Enseignement (UE) sont acquises dans le cadre d'un contrôle continu intégral. Celui-ci
+s'entend comme une évaluation régulière pendant la formation reposant sur plusieurs épreuves.
+
+\subsection{Assiduité}
+L'assiduité est un élément important du contrat pédagogique pour la
+réussite de la personne inscrite en B.U.T. L'obligation d'assiduité à
+toutes les activités pédagogiques organisées dans le cadre de la
+préparation du diplôme national de bachelor universitaire de technologie
+est indissociable de l'évaluation par contrôle continu intégral.
+
+Le règlement intérieur adopté par le conseil de l'IUT propose à
+l'établissement les modalités d'application de cette
+obligation. Lorsqu'elles ont une incidence sur l'évaluation, elles sont
+arrêtées par les CFVU de chaque établissement ou tout autre organe en
+tenant lieu sur proposition du Conseil de l'IUT.
+
+\subsection{Conditions de validation}
+Le bachelor universitaire de technologie s'obtient soit par acquisition
+de chaque unité d'enseignement constitutive, soit par application des
+modalités de compensation. Le bachelor universitaire de technologie
+obtenu par l'une ou l'autre voie confère la totalité des 180 crédits
+européens.
+
+Une unité d'enseignement est définitivement acquise et capitalisable dès
+lors que la moyenne obtenue à l'ensemble «~pôle ressources~» et « SAÉ »
+est égale ou supérieure à 10. L'acquisition de l'unité d'enseignement
+emporte l'acquisition des crédits européens correspondants.
+
+À l'intérieur de chaque unité d'enseignement, le poids relatif des
+éléments constitutifs, soit des pôles «~ressources~» et « SAÉ », varie
+dans un rapport de 40 à 60\%. En troisième année ce rapport peut
+toutefois être apprécié sur l'ensemble des deux unités d'enseignement
+d'une même compétence.
+
+La validation des deux UE du niveau d'une compétence emporte la
+validation de l'ensemble des UE du niveau inférieur de cette même
+compétence.
+
+\subsection{Compensation}
+La compensation s'effectue au sein de chaque unité d'enseignement ainsi
+qu'au sein de chaque regroupement cohérent d'UE.
+
+Seules les UE se référant à un même niveau d'une même compétence finale
+peuvent ensemble constituer un regroupement cohérent. Des UE se référant
+à des niveaux de compétence finale différents ou à des compétences
+finales différentes ne peuvent pas appartenir à un même regroupement
+cohérent. Aucune UE ne peut appartenir à plus d'un regroupement
+cohérent.  Au sein de chaque regroupement cohérent d'UE, la compensation
+est intégrale. Si une UE n'a pas été acquise en raison d'une moyenne
+inférieure à 10, cette UE sera acquise par compensation si et seulement
+si la moyenne a été obtenue au regroupement cohérent auquel l'UE
+appartient.
+
+\subsection{Règles de progression}
+La poursuite d'études dans un semestre pair d'une même année est de
+droit pour tous. La poursuite d'études dans un semestre impair
+est possible si et seulement s'il a été obtenu :
+\begin{itemize}
+\item la moyenne à plus de la moitié des regroupements cohérents d'UE ;
+\item et une moyenne égale ou supérieure à 8 sur 20 à chaque
+  regroupement cohérent d'UE.
+\end{itemize}
+La poursuite d'études dans le semestre 5 nécessite de plus la validation
+de toutes les UE des semestres 1 et 2 dans les conditions de validation
+des points 4.3 et 4.4, ou par décision de jury.
+
+Durant la totalité du cursus conduisant au bachelor universitaire de
+technologie, on peut être autorisé à redoubler une seule fois
+chaque semestre dans la limite de 4 redoublements. La direction de l'IUT
+peut autoriser un redoublement supplémentaire en cas de force majeure
+dûment justifiée et appréciée par ses soins. Tout refus d'autorisation
+de redoubler est pris après avoir entendu la personne à sa demande. Il
+doit être motivé et assorti de conseils d'orientation.
+
+\subsection{Jury}
+Le jury présidé par la direction de l'IUT délibère souverainement à
+partir de l'ensemble des résultats obtenus. Il se réunit chaque semestre
+pour se prononcer sur la progression et la validation des unités
+d'enseignement, l'attribution du diplôme universitaire de technologie au
+terme de l'acquisition des 120 premiers crédits européens du cursus et
+l'attribution de la licence professionnelle « bachelor universitaire de
+technologie ».
+
+\begin{minipage}{\linewidth}
+  \tableofcontents
+\end{minipage}
 \end{document}
 

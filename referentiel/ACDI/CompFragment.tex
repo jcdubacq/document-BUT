@@ -1,44 +1,115 @@
 % # context : data, module, year, complettres
+
+
+
+
+
+
+\compareytozero{($ (lasteast)-(lastwest) $)}{\coordinate(stpoint) at (lastwest);}{\coordinate(stpoint) at ($ (lasteast)-(mark5)+(NWi)+(-4,0) $);}
+\node[
+draw=black,%
+inner sep=2mm,rounded corners=2mm,%
+line width=.5mm,%
+align=center,
+text width={\xmarkfive},anchor=north west] (coeffs) at (stpoint) {%
+  %% set lastue=['']
+  %% for ue in module.getUE()|sort(attribute='id')
+  %% if loop.first
+  \textbf{Coefficient%
+    %% if loop.length>1
+    s de
+    %% else
+    {} de
+    %% endif
+    pondération
+  }\\
+  \begin{tabular}{l>{\itshape}lr}
+    \toprule
+    UE&Parcours&Coeff.\\
+    \midrule      
+    %% endif
+    %% set subcomp=ue.parent
+    %% set compnum=subcomp.parent.number|int
+    %% set compltr=complettres[compnum]
+    %% set uedetails=ue.getParts()
+    %% set uename=uedetails[0]
+    %% set ueparc=uedetails[1]
+    %% set lastuename=lastue.pop()
+    %% if lastue.append(uename)
+    %% endif
+    %% set coeffs=ue.getCoeff(module=[module])|sort(attribute='id')
+    %% set coeffsum=ue.getCoeff()|map(attribute='value')|map('int')|sum
+    %% set coeffsumstr=('/'+coeffsum) if coeffsum!=100 else '%'
+    %% for coeff in coeffs
+    %% if lastuename != uename
+    \VAR{uename|le}
+    %% endif
+    & \VAR{ueparc.getCanonical()|le}
+    & \subnode[inner sep=0mm,outer sep=0mm]{subnode\VAR{coeff.id|le}}{\textcolor{comp\VAR{compltr}pcolorC}{\VAR{coeff.value|le}\VAR{coeffsumstr|le}}}\\
+    %% endfor
+    %% if loop.last
+    \bottomrule
+  \end{tabular}
+  %% endif
+  %% else
+  Cet enseignement n'est pas évalué à ce semestre.
+  %% endfor
+};
+
+\compareytozero{($ (lasteast)-(lastwest) $)}{\coordinate(lastwest) at ($ (coeffs.south west)+(0,-2) $);}{\coordinate(lasteast) at ($ (coeffs.south east)+(0,-2) $);}
+
+
+\begin{pgfonlayer}{bg}
+  %% for ue in module.getUE()|sort(attribute='id')
+  %% set compnum=ue.parent.parent.number|int
+  %% set compltr=complettres[compnum]
+  %% for coeff in ue.getCoeff(module=[module])|sort(attribute='id')
+  \node[fit=(subnode\VAR{coeff.id|le}),inner sep=.5mm,rounded corners=1mm,%
+  fill=comp\VAR{compltr}colorC,%
+  draw=\comp\VAR{compltr}colorCd,%
+  ] {};
+  %% endfor
+  %% endfor
+\end{pgfonlayer}
+
+
 %% for complevel in module.getNiveauCompetence()|sort(attribute='id')
 %% set comp=complevel.parent
 %% set compnum=comp.number|int
 %% set compltr=complettres[compnum]
 %% set acs=module.ac.values()|sort(attribute='num')|selectattr('parent','==',complevel)
-%% set coeffs=module.getCoeff(comp=comp)|first
-%% set ue=complevel.getUE(semestre=module.sem)
-%% set coeffsum=ue.getCoeff()|map(attribute='value')|map('int')|sum
-%% set coeffsumstr=('/'+coeffsum) if coeffsum!=100 else '%'
 \compareytozero{($ (lasteast)-(lastwest) $)}{\coordinate(stpoint) at (lastwest);}{\coordinate(stpoint) at ($ (lasteast)-(mark5)+(NWi)+(-4,0) $);}
-\node[text=comp\VAR{compltr}pcolor,fill=comp\VAR{compltr}color,%
+\node[text=comp\VAR{compltr}pcolor,
+fill=comp\VAR{compltr}color,%
+draw=\comp\VAR{compltr}colord,%
 inner sep=2mm,rounded corners=2mm,%
-line width=.5mm,draw=comp\VAR{compltr}color,%
+line width=.5mm,%
 text width={\xmarkfive},anchor=north west] (ac\VAR{compnum}title) at (stpoint) {%
   \Large\bfseries
   %% if comp.isPlural()>1
   \VAR{comp.getName()}
   %% else
-  Compétence \VAR{compnum}
+  \hyperref[FICHE-\VAR{complevel.id|le}]{Compétence \VAR{compnum}}
   %% endif
 };
-%% if coeffs
-\node[draw=blackpagecolor,inner sep=1mm,anchor=north east,fill=whitepagecolor,rounded corners] (coeffs) at ($ (ac\VAR{compnum}title.north east)+(-1,-1) $)
-{\textcolor{blacktextcolor}{\large\bfseries\VAR{coeffs.value|le}\VAR{coeffsumstr|le}}};
-%% endif
 
 \coordinate (last) at (ac\VAR{compnum}title.south west);
-\node[text=blacktextcolor,fill=comp\VAR{compltr}color!25!whitepagecolor,%
-inner sep=2mm,%
+\node[
+text=comp\VAR{compltr}pcolorC,
+fill=comp\VAR{compltr}colorC,
+inner sep=2mm,
 text width={\xmarkfive},anchor=north west] (ac\VAR{compnum}level) at ($ (last)+(0,1.5) $) {%
   \setlength\topsep{0pt}\setlength\partopsep{0pt}\begin{flushleft}
     \VAR{complevel.getName()|le}
   \end{flushleft}
 };
 \coordinate (last) at (ac\VAR{compnum}level.south west);
-\node[text=blacktextcolor,fill=comp\VAR{compltr}color!25!whitepagecolor,%
+\node[
+text=comp\VAR{compltr}pcolorC,
+fill=comp\VAR{compltr}colorC,
 inner sep=2mm,%
 text width={\xmarkfive},anchor=north west] (ac\VAR{compnum}acs) at ($ (last)+(0,1.5) $) {
   \setlength\topsep{0pt}\setlength\partopsep{0pt}\begin{flushleft}
-    %% if acs
     %% for ac in acs
     %% if not ac.isPlural()>1
     \textbf{AC \VAR{ac.num|le}}
@@ -47,13 +118,15 @@ text width={\xmarkfive},anchor=north west] (ac\VAR{compnum}acs) at ($ (last)+(0,
     %% if not loop.last
     \par
     %% endif
-    %% endfor
     %% else
-    (pas d'apprentissage critique)
-    %% endif
+    \emph{(pas d'apprentissage critique)}
+    %% endfor
   \end{flushleft}
 };
 \draw[line width=.5mm,draw=comp\VAR{compltr}color] (ac\VAR{compnum}title.base west)--(ac\VAR{compnum}acs.south west)--(ac\VAR{compnum}acs.south east)--(ac\VAR{compnum}title.base east);
 \draw[line width=.5mm,draw=comp\VAR{compltr}color,dotted] ($ (0,-1)+(ac\VAR{compnum}acs.north west) $)--($ (0,-1)+(ac\VAR{compnum}acs.north east) $);
+\draw[line width=.5mm,draw=\comp\VAR{compltr}colord] (ac\VAR{compnum}title.base west)--(ac\VAR{compnum}acs.south west)--(ac\VAR{compnum}acs.south east)--(ac\VAR{compnum}title.base east);
+\draw[line width=.5mm,draw=\comp\VAR{compltr}colord,dotted] ($ (0,-1)+(ac\VAR{compnum}acs.north west) $)--($ (0,-1)+(ac\VAR{compnum}acs.north east) $);
 \compareytozero{($ (lasteast)-(lastwest) $)}{\coordinate(lastwest) at ($ (ac\VAR{compnum}acs.south west)+(0,-2) $);}{\coordinate(lasteast) at ($ (ac\VAR{compnum}acs.south east)+(0,-2) $);}
 %% endfor
+

@@ -1,0 +1,139 @@
+% All encoding stuff
+\usepackage[LUC,T2A,T1]{fontenc}%
+\usepackage[verbose]{newunicodechar}
+\usepackage{fontspec}
+\usepackage[T1]{fontenc}
+\usepackage{textcomp}
+
+% Drawing stuff
+\usepackage[usenames,dvipsnames]{xcolor}
+\usepackage[prefix=sol-]{xcolor-solarized}
+\usepackage{tikz}%
+\usetikzlibrary{tikzmark,calc,fit,shapes,shapes.misc,arrows,shadows.blur,snakes}%
+\usepackage{tcolorbox}
+\usepackage{graphicx}
+\usepackage{pdfpages}
+\pgfdeclarelayer{bg}    % declare background layer
+\pgfdeclarelayer{bgbg}    % declare background layer
+\pgfsetlayers{bgbg,bg,main}
+
+%% if color==1
+%% include 'Color.tex'
+%% else
+%% include 'ColorBW.tex'
+%% endif
+
+% Typography stuff
+\usepackage{geometry}
+\usepackage{fancyhdr}
+\usepackage{dcolumn,colortbl}
+\usepackage{soul} % better underline \ul
+\setuldepth{Berlin} % no descending to imitate word
+
+% Linking stuff
+
+\usepackage{hyperref,bookmark}
+\hypersetup{%
+  colorlinks,
+  urlcolor=blacktextemphcolor,
+  linkcolor=.
+}
+
+% Pure LaTeX stuff
+
+\usepackage{ifthen}
+\usepackage{tabularx,multirow,booktabs,ragged2e}
+\usepackage{colortbl}%
+\usepackage[french]{babel}
+\usepackage{enumitem,xspace}
+\newcommand\samebox[2]{%
+  \makebox[\widthof{#1}][r]{#2}%
+}
+
+\newlength{\mywidth}
+\newcommand{\resetwidth}{\setlength{\mywidth}{0pt}}
+\newcommand{\maxwidth}[1]{\setlength{\mywidth}{\maxof{\mywidth}{\widthof{#1}}}}
+\newcommand{\rothead}[1]{\rotatebox[origin=l]{90}{\parbox{\mywidth}{#1}}}
+
+\newcommand{\compareytozero}[3]{\path #1;\pgfgetlastxy{\xdelta}{\ydelta};\ifdim\ydelta<0pt#2\else#3\fi}
+\setcounter{tocdepth}{2}
+\newcolumntype{H}{r}
+
+% Unused stuff
+% \usepackage[utf8x]{inputenc}%
+% \usepackage{etoolbox}
+% \usepackage[scale=.5,text=DOCUMENT~DE~TRAVAIL]{draftwatermark}
+
+% Typographic settings
+
+\makeatletter
+\newcommand\HUGE{\@setfontsize\Large{32pt}{40}}
+\renewcommand\Huge{\@setfontsize\Large{24pt}{30}}
+\renewcommand\LARGE{\@setfontsize\Large{16pt}{20}}
+\renewcommand\Large{\@setfontsize\Large{13pt}{16}}
+\renewcommand\large{\@setfontsize\Large{11pt}{13}}
+\renewcommand\normalsize{\@setfontsize\Large{10pt}{12}}
+\renewcommand\small{\@setfontsize\Large{9pt}{11}}
+\renewcommand\footnotesize{\@setfontsize\Large{8pt}{9}}
+\makeatother
+
+\geometry{a4paper,left=\VAR{margin}mm,right=\VAR{margin}mm,top=25 mm,bottom=25mm}
+\setmainfont{Arial}
+\makeatletter
+\newunicodechar{«}{\fontspec{Arial}\char"00AB\FB@guillspace\ignorespaces}
+\newunicodechar{»}{\unskip\FB@guillspace\fontspec{Arial}\char"00BB\xspace}
+\newunicodechar{©}{\fontspec{Arial}\char"00A9\unskip\,}
+\makeatother
+\setlength{\parindent}{0pt}
+\setlength{\tabcolsep}{2mm}\setlength{\arrayrulewidth}{.2mm}
+
+\pagestyle{fancy}
+\renewcommand{\sectionmark}[1]{%
+  \gdef\currsection{#1}%
+}
+\renewcommand{\subsectionmark}[1]{%
+  \markright{\currsection\ \textbullet\ #1}%
+}
+\def\fancy{%
+  \fancyhf{}%
+  \fancyhead[C]{%
+    %% if layout>0
+    \begin{tikzpicture}[overlay,remember picture,x=1mm,y=1mm]%
+      \draw[thin, dashed] ($ (current page.north west)+(\VAR{margin},0) $)--($ (current page.south west)+(\VAR{margin},0) $);
+      \draw[thin, dashed] ($ (current page.south west)+(\VAR{margin},25) $)--($ (current page.south east)+(\VAR{margin},25) $);
+      \draw[thin, dashed] ($ (current page.north west)+(\VAR{margin},-25) $)--($ (current page.north east)+(\VAR{margin},-25) $);
+      \draw[thin, dashed] ($ (current page.north east)+(-\VAR{margin},0) $)--($ (current page.south east)+(-\VAR{margin},0) $);
+    \end{tikzpicture}%
+    %% endif
+  }
+  \fancyhead[L]{\small\emph{\rightmark}}%
+  \fancyhead[R]{\thepage}%
+  \fancyfoot[L]{\textcolor{blacktextdimmedcolor}{©~\VAR{data.author|le}}\\%
+    \href{\VAR{data.url|le}}{\ul{\VAR{data.url|le}}}}%
+  \fancyfoot[R]{\textcolor{blacktextdimmedcolor}{\VAR{data.version|le}\\\VAR{data.getName()|le} (\leparcours)}}%
+}
+\fancy
+
+\renewcommand{\headrulewidth}{0pt}
+
+\newcommand{\selectallparcours}{\def\leparcours{\VAR{data.getParcours().getCanonical()|le}}\fancy}
+\newcommand{\selectparcours}[1]{\gdef\leparcours{#1}\fancy}
+\selectallparcours
+
+% Only three sizes of titles (including normalsize)
+\usepackage{titlesec}
+\renewcommand\thesection{\Alph{section}}
+\renewcommand\thesubsection{\arabic{subsection}}
+\renewcommand\thesubsubsection{\arabic{subsubsection}}
+\newcommand\invisiblesubsubsection[2]{\vbox{\setlength{\lineskip}{0pt}\vbox to 0pt{\smash{\refstepcounter{subsubsection}\phantomsection\addcontentsline{toc}{subsubsection}{\protect\numberline{\thesubsubsection}#1}\subsubsectionmark{#1}}\par}#2}}
+
+\titleformat{\section}{\normalfont\LARGE\bfseries\color{blacktextemphcolor}}%
+{\tcbox[colback=blackpagecolor, colframe=blackpagecolor, coltext=whitetextdimmedcolor, on line, boxsep=0pt, left=4pt, right=4pt, top=4pt, bottom=4pt]{\textcolor{whitetextcolor}{\thesection}}}{0.4em}{}
+\titleformat{\subsection}{\normalfont\Large\bfseries\color{blacktextemphcolor}}%
+{\tcbox[colback=blackpagecolor, colframe=blackpagecolor, coltext=whitetextdimmedcolor, on line, boxsep=0pt, left=4pt, right=4pt, top=4pt, bottom=4pt]{\thesection.\textcolor{whitetextcolor}{\thesubsection}}}{0.4em}{}
+\titleformat{\subsubsection}{\normalfont\large\bfseries\color{blacktextemphcolor}}%
+{\tcbox[colback=blackpagecolor, colframe=blackpagecolor, coltext=whitetextdimmedcolor, on line, boxsep=0pt, left=4pt, right=4pt, top=4pt, bottom=4pt]{\thesection.\thesubsection.{\normalsize\selectfont\textcolor{whitetextcolor}{\thesubsubsection}}}}{0.4em}{}
+
+\newcommand{\textitemize}{–\xspace}
+\newcommand{\textitemizesecondary}{\textbullet\xspace}
+

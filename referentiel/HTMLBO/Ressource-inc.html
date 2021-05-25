@@ -1,0 +1,116 @@
+{% set year=utils.semestre2year(ress.getSemestreList()[0]) %}
+{% set comps=data.getPossibleCompObjects(ress.getParcoursObjects(),year) %}
+{% set t=comps|length %}
+{% set tstr=t|string %}
+{% set dimens={'oneinmany':'{0:.3f}mm'.format((190.0-(t+1)*0.2-t*4.0)/t),'allbutoneinmany':'{0:.3f}mm'.format((190.0-3*0.2-2*4.0)-(190.0-(t+1)*0.2-t*4.0)/t),'all':'{0:.3f}mm'.format((190.0-2*0.2-1*4.0)/1)} %}
+{% set mcall='style="text-align: center;width:'+dimens['all']+'" colspan="'+tstr+'"' %}
+{% set mcone='style="text-align: center;width:'+dimens['oneinmany']+'"' %}
+{% set mconeinmany='style="text-align: left;width:'+dimens['oneinmany']+'"' %}
+{% set mcallbutone='style="text-align: left;width:'+dimens['allbutoneinmany']+'" colspan="{}"'.format(t-1) %}
+{% set semestres=ress.getSemestreList() %}
+{% set goodac=ress.getACObjects() %}
+{% set allsaes=data.getSAEObjects() %}
+{% set source=data.getHoursBlock(ress.getId()) %}
+{% set resstot=source.sumIn(['TP','TD'])-source.sumOut(['TP','TD']) %}
+{% set resstp=source.sumIn(['TP'])-source.sumOut(['TP']) %}
+{% set ressproj=source.sumIn(['PROJ'])-source.sumOut(['PROJ']) %}
+<h3>Annexe D — Fiche SAÉ — {{ress.getId()}} <em>{{ress.getShorttxt()}}</em></h3>
+<table>
+  <tbody>
+    <tr>
+      <th {{mconeinmany}}>Nom</th>
+      <td {{mcallbutone}}>{{ress.getLongtxt()}}</td>
+    </tr>
+    <tr>
+      <th {{mconeinmany}}>Semestre{{'s' if semestres|length>1 else ''}}</th>
+      <td {{mcallbutone}}>{{semestres|elegantjoin}}</td>
+    </tr>
+    <tr>
+      <th {{mcall}}>Compétence{{'s' if comps|length>1 else ''}} ciblée{{'s' if comps|length>1 else ''}}</th>
+    </tr>
+    <tr>
+      {% for c in comps %}
+      <td {{mcone}}>Compétence {{c.getNum()}}</td>
+      {% endfor %}
+    </tr>
+    <tr>
+      {% for c in comps %}
+      <td {{mcone}}>{% for ac in goodac if ac.getCompId()==c.getId() %}{% if loop.first %}{{c.getNiveauDict(year).values()|elegantjoin}}{% endif %}{% else %}&nbsp;{% endfor %}</td>
+      {% endfor %}
+    </tr>
+    <tr>
+      <th {{mcall}}>Apprentissages critiques</th>
+    </tr>
+    <tr>
+      {% for c in comps %}
+      <td {{mcone}}>{% for ac in goodac if ac.getCompId()==c.getId() %}{% if not loop.first %}<br/>{% endif %}<strong>AC&nbsp;{{ac.getNum()}}</strong> {{ac.getLongtxt()}}{% else %}&nbsp;{% endfor %}</td>
+      {% endfor %}
+    </tr>
+    <tr>
+      <th {{mconeinmany}}>SAÉ concernées</th>
+      <td {{mcallbutone}}>
+        {% for sae in allsaes if ress in sae.getRessourceObjects() %}
+        {% if not loop.first %}
+        <br/>
+        {% endif %}
+        {{sae.getId()}} {{sae.getLongtxt()}}
+        {% else %}
+        &nbsp;
+        {% endfor %}
+      </td>
+    </tr>
+    <tr>
+      <th {{mconeinmany}}>Prérequis</th>
+      <td {{mcallbutone}}>
+        {% for prq in ress.getPrerequisObjects() %}
+        {% if not loop.first %}
+         ;
+        {% endif %}
+        {{prq.getId()}} {{prq.getLongtxt()}}
+        {% else %}
+        —
+        {% endfor %}
+      </td>
+    </tr>
+    <tr>
+      <th {{mconeinmany}}>Descriptif détaillé</th>
+      <td {{mcallbutone}}>
+        {% for o in ress.getObjectifList() %}
+        <p>{{o}}</p>
+        {% endfor %}
+        {% for s in ress.getSavoirsList() %}
+        {% if loop.first %}
+        <p>Les savoirs de référence suivants devront être étudiés :</p>
+        <ul>
+          {% endif %}
+          <li>{{s}}</li>
+          {% if loop.last %}
+        </ul>
+        {% endif %}
+        {% endfor %}
+        {% for d in ress.getDescriptionList() %}
+        <p>{{d}}</p>
+        {% else %}
+        ???
+        {% endfor %}
+      </td>
+    </tr>
+    <tr>
+      <th {{mconeinmany}}>Mots clés</th>
+      <td {{mcallbutone}}>
+        {% set keywords=ress.getKeywordsList() %}
+        {% if keywords|length > 0 %}
+        {{keywords|join(', ')}}
+        {% else %}
+        —
+        {% endif %}
+      </td>
+    </tr>
+    <tr>
+      <th {{mconeinmany}}>Heures de formation</th>
+      <td {{mcallbutone}}>
+        {{resstot|hours}} (dont {{resstp|hours}} de TP)
+      </td>
+    </tr>
+  </tbody>
+</table>

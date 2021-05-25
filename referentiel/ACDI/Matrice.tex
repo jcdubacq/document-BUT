@@ -1,11 +1,45 @@
 % # context : data, utils, year, parcours
 %% set comps=parcours.getCompLevel(year)|sort(attribute='id')
 %% for comp in comps
+%% set cn=comp.parent.number|int
+%% if cn<0
+%% set cn=0
+%% endif
+%% if complettres|length <= cn
+%% set cn=0
+%% endif
+%% set cl=complettres[cn]
 %% set acs=comp.ac.values()
 %% set allcolumns=acs|length+2
 \subsubsection{Matrice des apprentissages critiques A\VAR{year|le} — C\VAR{comp.parent.number|le} — \VAR{parcours.getCanonical(lower=False)|le}}
 \selectparcours{\VAR{parcours.getCanonical()|le}}
-
+\begin{tikzpicture}[remember picture, overlay,baseline=(cornersw.south),
+  x=1mm,y=1mm,every node/.style={inner sep=0pt,outer sep=0pt}]
+  \coordinate (start) at (0,0);
+  \coordinate (NW) at (start-|current page.north west);
+  \coordinate (NE) at (start-|current page.north east);
+  \coordinate (NWi) at ($ (NW)+(\VAR{margin},0)+(2,0) $);
+  \coordinate (NEi) at ($ (NE)+(-\VAR{margin},0)+(-2,0) $);
+  \node[align=flush center,
+  anchor=north west,
+  text width=186mm,
+  text=comp\VAR{cl}pcolor
+  ] (title) at ($ (NWi)+(0,-2) $) {\normalfont\large\bfseries
+    Compétence \VAR{comp.parent.number|le} : \VAR{comp.parent.getName()|le}
+  };
+  \begin{pgfonlayer}{bg}
+    \coordinate(nw) at ($ (title.north west)+(-2,2) $);
+    \coordinate(se) at ($ (title.south east)+(2,-2) $);
+    \node[
+    fill=comp\VAR{cl}color,
+    draw=\comp\VAR{cl}colord,
+    fit=(nw) (se),
+    blur shadow={shadow blur steps=5}%
+    ] (toptitle) {};
+  \end{pgfonlayer}
+  \coordinate (cornernw) at (NWi|-toptitle.north);
+  \coordinate (cornersw) at ($ (NWi|-toptitle.south)+(0,-4) $);
+\end{tikzpicture}
 \noindent\begin{minipage}[t]{.45\textwidth}
   \begin{flushleft}
     \VAR{comp.getShortname()|le}

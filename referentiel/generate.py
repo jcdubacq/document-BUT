@@ -18,6 +18,7 @@ import json
 doc=None
 
 latexconv = {
+    ' ': r'\,',
     '&': r'\&',
     '%': r'\%',
     '$': r'\$',
@@ -134,6 +135,9 @@ utils={'semestre2year':semestre2year,'year2semestre':year2semestre}
 
 class Printer:
     def __init__(self,REF,mode):
+        self.color=1
+        self.layout=0
+        self.margin=10
         self.queue=deque()
         self.done=deque()
         self.REF=REF
@@ -396,7 +400,7 @@ class Catalog:
                     except(CatalogError):
                         raise CatalogError('Wrong dereference for key {} in field {} of object {}'.format(x,key,object.id))
                     d[x]=y
-                y.addBackref(object)
+                    y.addBackref(object)
             setattr(object,key,d)
 
         
@@ -530,17 +534,17 @@ class CompositeCompetence(SmartObject):
     class_fkeys=['indirect']
     def _add_subcomp(self,id,d,backref=None,namespace=None):
         return NiveauCompetence(id,d,backref=backref,namespace=namespace)
+    def isPlural(self):
+        return 2
     
 
 class NiveauCompetence(SmartObject):
     class_props=['name','level']
-    class_subs=['ac','ue','multiac']
+    class_subs=['ac','ue']
     def _add_ac(self,id,d,backref=None,namespace=None):
         return ApprentissageCritique(id,d,backref=backref,namespace=namespace)
     def _add_ue(self,id,d,backref=None,namespace=None):
         return UE(id,d,backref=backref,namespace=namespace)
-    def _add_multiac(self,id,d,backref=None,namespace=None):
-        return CompositeApprentissageCritique(id,d,backref=backref,namespace=namespace)
     def getUE(self,semestre=None):
         if semestre==None:
             return self.ue
@@ -548,13 +552,19 @@ class NiveauCompetence(SmartObject):
             if u.sem==semestre:
                 return u
         return None
+    def getParcours(self):
+        a=set()
+        for i in self.backref:
+            if isinstance(i,Parcours):
+                a.add(i)
+            if isinstance(i,CompositeParcours):
+                a=a|i.getExpandedSet()
+        return ParcoursSet(a)
 
 
 class ApprentissageCritique(SmartObject):
     class_props=['name','num','shortname']
 
-class CompositeApprentissageCritique(SmartObject):
-    class_props=['name','num','shortname']
 
 
 class UE(SmartObject):
@@ -565,7 +575,15 @@ class UE(SmartObject):
             return CoefficientSet({x for x in self.backref if isinstance(x,Coefficient)})
         else:
             return CoefficientSet({x for x in self.backref if isinstance(x,Coefficient) and x.parent in module})
+    def getName(self):
+        return 'UE '+self.sem+'.'+self.parent.parent.number+' ('+self.getParcours().getCanonical()+')'
+    def getShortname(self):
+        return 'UE '+self.sem+'.'+self.parent.parent.number+' ('+self.getParcours().getCanonical(short=True)+')'
+    def getParts(self):
+        return ('UE '+self.sem+'.'+self.parent.parent.number,ParcoursSet(self.getParcours()))
 
+    def getParcours(self):
+        return ParcoursSet(self.parcours.values())
 class Parcours(SmartObject):
     class_props=['letter','name','shortname']
     class_arrayprops=['introtxt','job','jobsecondary','jobsenior']
@@ -576,7 +594,9 @@ class Parcours(SmartObject):
         return False
     def getExpandedSet(self):
         return ParcoursSet({self})
-    def getCanonical(self,lower=True):
+    def getCanonical(self,lower=True,short=False):
+        if short:
+            return self.letter
         return ('p' if lower else 'P')+'arcours '+self.letter
     def getCompLevel(self,year=None):
         if year==None:
@@ -602,10 +622,13 @@ class CompositeParcours(SmartObject):
             s=s|x.getExpandedSet()
         return ParcoursSet(s)
 
-    def getCanonical(self,lower=True):
+    def getCanonical(self,lower=True,short=False):
+        t=self.letter
+        if short:
+            t=re.sub(' *parcours *','',t)
         if lower:
-            return self.letter[0].lower()+self.letter[1:]
-        return self.letter[0].upper()+self.letter[1:]
+            return t[0].lower()+t[1:]
+        return t[0].upper()+t[1:]
     def isPlural(self):
         return 2
     def getCompLevel(self,year=None):
@@ -622,20 +645,25 @@ class CompositeParcours(SmartObject):
         return ''.join(sorted([x.letter for x in self.indirect.values()]))
                             
 class ParcoursSet(set):
-    def getCanonical(self,lower=True):
+    def getCanonical(self,lower=True,short=False):
         t=set()
         for p in self:
             t=t|p.getExpandedSet()
         if len(t)==0:
-            return 'hors parcours'
+            if short:
+                return 'aucun'
+            else:
+                return 'hors parcours'
         for i in self:
             namespace=i.namespace
             break
         for p in namespace.getParcours():
             pp=p.getExpandedSet()
             if len(t&pp)==len(t) and len(t)==len(pp):
-                return p.getCanonical()
-        s='parcours ' if lower else 'Parcours '
+                return p.getCanonical(lower=lower,short=short)
+        s=''
+        if not short:
+            s='parcours ' if lower else 'Parcours '
         s+=elegantjoin(sorted([x.letter for x in t]))
         return s
     def getCompLevel(self,year=None):
@@ -688,10 +716,7 @@ class Module(SmartObject):
     def getUE(self,comp=None):
         return {x.ue for x in self.getCoeff(comp=comp)}
     def getNiveauCompetence(self,comp=None):
-        u=self.getUE(comp=comp)
         b=set()
-        for x in u:
-            b.add(x.parent)
         ac=self.ac.values()
         for x in ac:
             b.add(x.parent)
@@ -701,6 +726,8 @@ class Module(SmartObject):
         return self.id+' '+self.getName()
     def getShortCanonical(self,lower=True):
         return self.id+' '+self.getShortname()
+    def getShortId(self):
+        return re.sub('[^A-Z0-9a-z]','',self.id)
 class ModuleList(list):
     def getParcoursBin(self):
         a={}
@@ -751,7 +778,7 @@ class Ressource(Module):
     def moduleType(self):
         return "2"
     def getDiscipline(self):
-        return [[y.strip() for y in x.split(',')] for x in self.discipline]
+        return [[y.strip() for y in x.split(';')] for x in self.discipline]
 
 class Savoir(SmartObject):
     class_arrayprops=['topic']
@@ -873,7 +900,7 @@ class ReaderCSV:
                     continue
                 self.addrow(row)
     def readData(self):
-        for filename in ['Referentiel','Competence','CompositeCompetence','NiveauCompetence','ApprentissageCritique','CompositeApprentissageCritique','Parcours','CompositeParcours','UE','Ressource','Savoir','SAE','SAEModel','Portfolio','Source','Horaires','Coeff']:
+        for filename in ['Referentiel','Competence','CompositeCompetence','NiveauCompetence','ApprentissageCritique','Parcours','CompositeParcours','UE','Ressource','Savoir','SAE','SAEModel','Portfolio','Source','Horaires','Coeff']:
             self.readDataFromFile(os.path.join(self.path,filename+'.tsv'))
         return self
     def output(self):
@@ -900,6 +927,7 @@ class ReaderCSV:
 jobs=[]
 currentversion='test'
 currentdata='BUT'
+currentoptions={}
 
 for arg in sys.argv[1:]:
     x=re.match(r'^version=(.*)$',arg)
@@ -910,17 +938,26 @@ for arg in sys.argv[1:]:
     if x:
         currentdata=x.group(1)
         continue
+    found=False
+    for popt in ['color','layout','margin']:
+        x=re.match(r'^printer.'+popt+'=(.*)$',arg)
+        if x:
+            currentoptions[popt]=int(x.group(1))
+            found=True
+            continue
+    if found:
+        continue
     files = os.listdir(os.path.join('.',arg))
     if files:
         if 'Referentiel.tex' in files:
-            jobs.append((arg,'LaTeX','Referentiel.tex',currentversion,currentdata))
+            jobs.append((arg,'LaTeX','Referentiel.tex',currentversion,currentdata,currentoptions))
         if 'Referentiel.html' in files:
-            jobs.append((arg,'HTML','Referentiel.html',currentversion,currentdata))
+            jobs.append((arg,'HTML','Referentiel.html',currentversion,currentdata,currentoptions))
         if 'Referentiel.json' in files:
-            jobs.append((arg,'JSON','Referentiel.json',currentversion,currentdata))
+            jobs.append((arg,'JSON','Referentiel.json',currentversion,currentdata,currentoptions))
 
 if len(jobs)==0:
-    jobs=[('ACDI','LaTeX','Referentiel.tex',currentversion,currentdata)]
+    jobs=[('ACDI','LaTeX','Referentiel.tex',currentversion,currentdata,currentoptions)]
 
 REF=None
 for arg in jobs:
@@ -938,15 +975,13 @@ for arg in jobs:
         REF.version=arg[3]
     if arg[1]=='LaTeX':
         oneprinter=LaTeXPrinter(REF,arg[0])
-        oneprinter.addTemplate(arg[2],REF.getShortname(),{})
-        oneprinter.run()
     elif arg[1]=='HTML':
         oneprinter=HTMLPrinter(REF,arg[0])
-        oneprinter.addTemplate(arg[2],REF.getShortname(),{})
-        oneprinter.run()
     elif arg[1]=='JSON':
         oneprinter=JSONPrinter(REF,arg[0])
-        oneprinter.addTemplate(arg[2],REF.getShortname(),{})
-        oneprinter.run()
+    for x in arg[5]:
+        setattr(oneprinter,x,arg[5][x])
+    oneprinter.addTemplate(arg[2],REF.getShortname(),{})
+    oneprinter.run()
 
 sys.exit(0)

@@ -1,15 +1,51 @@
+  %% for level in [1,2,3]
+  %% set gradientletters=['C','B','']
+  %% set gradientletter=gradientletters[level-1]
+  %% set levelstr=level|string
+  %% set distance=63.3333333333*(level-1)
+  %% for subcomp in comp.subcomp.values() if subcomp.level==levelstr
+  \node[anchor=north west,
+  text=comp\VAR{cl}pcolor\VAR{gradientletter},
+  text width=59.33333333mm,
+  ] (comp\VAR{levelstr}) at ($ (bloc.south west)+(\VAR{distance},-6) $) {%
+    \begin{hyphenrules}{nohyphenation}%
+      \sloppy\small%
+      \VAR{subcomp.getShortname()|le}%
+      \null\nobreak\hfill\mbox{\,\textbf{\VAR{subcomp.getParcours().getCanonical(short=true)|le}}}
+    \end{hyphenrules}
+  };
+  %% else
+  \coordinate (comp\VAR{levelstr}) at ($ (bloc.south west)+(\VAR{distance},-6) $);
+  %% endfor
+  %% endfor
+  \node [fit=(comp1)(comp2)(comp3)] (subcompbloc) {};
 
 
 
 
 
 
-    %% for c in comps:
-    %% set co=c.getCoeffs(onlyType=['RESS','SAE','PORTFOLIO'],semestre=sem)
-    %% if co
-    \textbf{\VAR{co[1]|le}}
+
+
+    %% set subcomps=comp.subcomp.values()|sort(attribute='level')
+    %% for subcomp in subcomps
+    %% set level=subcomp.level|int
+    %% set gradientletters=['C','B','']
+    %% set gradientletter=gradientletters[level-1]
+    \coordinate (nw) at ($ (comp\VAR{level}.north west)+(-2,2) $);
+    \coordinate (se) at ($ (comp\VAR{level}.south east|-subcompbloc.south)+(2,-2) $);
+    \path [
+    draw=\comp\VAR{cl}color\VAR{gradientletter}d,
+    fill=comp\VAR{cl}color\VAR{gradientletter},
+    thin] (nw)%
+    %% if not loop.first
+    --++(-2,0)--($ .5*(nw)+.5*(se-|nw)+(2,0) $)--($ (se-|nw)+(-2,0) $)
     %% endif
-    %% if not loop.last:
-    &
+    --(se-|nw)
+    %% if not loop.last
+    --($ (se)+(-2,0) $)--($ .5*(se)+.5*(se|-nw)+(2,0) $)--($ (se|-nw)+(-2,0) $)
+    %% else
+    --(se)--(se|-nw)
     %% endif
+    --cycle;
     %% endfor
