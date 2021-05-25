@@ -1,4 +1,4 @@
-% # context : data, utils, year, parcours
+% # context : data, year, parcours
 %% set comps=parcours.getCompLevel(year)|sort(attribute='id')
 %% for comp in comps
 %% set cn=comp.parent.number|int
@@ -56,7 +56,7 @@
       %% endfor
       \\
       \cmidrule(lr){2-2}\cmidrule(lr){3-\VAR{allcolumns}}
-      %% for sem in utils.year2semestre(year)
+      %% for sem in (year|year2semestre)
       %% set ue=comp.getUE(semestre=sem)    
       %% set semloop=loop
       %% for lcode,lname in [('RESS','Ressources'),('SAE','SAÉ')]

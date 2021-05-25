@@ -1,4 +1,4 @@
-% # context : data, utils, sem, parcours
+% # context : data, sem, parcours
 %% macro linesae(hoursin,hoursout,lonely)
 \VAR{lonely}\VAR{(hoursin.sum(onlyType=['PROJ'])-hoursout.sum(onlyType=['PROJ']))|hoursnum}
 &\VAR{lonely}\VAR{(hoursin.sum(onlyType=['TD'])-hoursout.sum(onlyType=['TD']))|hoursnum}
@@ -17,7 +17,7 @@
 &\VAR{lonely}\VAR{(hoursin.sum(onlyType=['TP'])-hoursout.sum(onlyType=['TP']))|hoursnum}
 &\VAR{lonely}\VAR{(hoursin.sum()-hoursout.sum())|hoursnum}
 %% endmacro
-%% set year=utils.semestre2year(sem)
+%% set year=sem|semestre2year
 \subsubsection{Horaires S\VAR{sem|le} — \VAR{parcours.getCanonical(lower=False)|le}}
 \selectparcours{\VAR{parcours.getCanonical()|le}}
 %% set allmodules=data.getModule(semestre=sem,interparcours=parcours)
