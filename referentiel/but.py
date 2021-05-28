@@ -431,11 +431,10 @@ class Catalog:
 
 
 class Referentiel(Catalog, SmartObject):
-    class_props = ["version", "author", "authorshort", "name", "number", "url"]
+    class_props = ["version", "author", "authorshort", "name", "url"]
     class_arrayprops = ["introtxt"]
     class_subs = [
         "comp",
-        "multicomp",
         "parcours",
         "multiparcours",
         "ress",
@@ -453,9 +452,6 @@ class Referentiel(Catalog, SmartObject):
 
     def _add_comp(self, id, d, backref=None, namespace=None):
         return Competence(id, d, backref=backref, namespace=namespace)
-
-    def _add_multicomp(self, id, d, backref=None, namespace=None):
-        return CompositeCompetence(id, d, backref=backref, namespace=namespace)
 
     def _add_parcours(self, id, d, backref=None, namespace=None):
         return Parcours(id, d, backref=backref, namespace=namespace)
@@ -538,7 +534,10 @@ class Referentiel(Catalog, SmartObject):
             if year != None:
                 sems = set(Printer.year2semestre(year))
             elif semestre != None:
-                sems = {semestre}
+                if isinstance(semestre,set) or isinstance(semestre,list):
+                    sems={sem for sem in semestre}
+                else:
+                    sems = {semestre}
         if len(sems):
             modules = {x for x in modules if len({x.sem} & sems)}
         if parcours != None or interparcours != None:
@@ -570,7 +569,6 @@ class Referentiel(Catalog, SmartObject):
             destination = {x.id for x in destination}
         a = set()
         for i in self.hours.values():
-            print(i.source)
             s = i.source.id
             d = i.destination.id
             if s in source or len(source) == 0:
@@ -578,6 +576,39 @@ class Referentiel(Catalog, SmartObject):
                     if onlyType == None or i.type in onlyType:
                         a.add(i)
         return HoursSet(a)
+
+    def getNumber(self,all=False):
+        numberdict = {
+            "CJ": 1,
+            "CS": 2,
+            "CHIMIE": 3,
+            "GB": 4,
+            "GCGP": 5,
+            "GCCD": 6,
+            "GEII": 7,
+            "GIM": 8,
+            "GMP": 9,
+            "GTE": 10,
+            "GACO": 11,
+            "GEA": 12,
+            "GLT": 13,
+            "HSE": 14,
+            "INFOCOM": 15,
+            "INFO": 16,
+            "MP": 17,
+            "MMI": 18,
+            "PEC": 19,
+            "QLIO": 20,
+            "RT": 21,
+            "SGM": 22,
+            "STID": 23,
+            "TC": 24,
+        }
+        if all:
+            return numberdict
+        if self.id in numberdict:
+            return numberdict[self.id]
+        return 0
 
 
 class Competence(SmartObject):
@@ -587,18 +618,6 @@ class Competence(SmartObject):
 
     def _add_subcomp(self, id, d, backref=None, namespace=None):
         return NiveauCompetence(id, d, backref=backref, namespace=namespace)
-
-
-class CompositeCompetence(SmartObject):
-    class_props = ["name", "number", "shortname"]
-    class_subs = ["subcomp"]
-    class_fkeys = ["indirect"]
-
-    def _add_subcomp(self, id, d, backref=None, namespace=None):
-        return NiveauCompetence(id, d, backref=backref, namespace=namespace)
-
-    def isPlural(self):
-        return 2
 
 
 class NiveauCompetence(SmartObject):
@@ -795,7 +814,6 @@ class ParcoursSet(set):
         for x in self:
             return x.isPlural()
         return 1
-
 
 class Module(SmartObject):
     def _add_coeff(self, id, d, backref=None, namespace=None):
@@ -1075,7 +1093,6 @@ class ReaderCSV:
         for filename in [
             "Referentiel",
             "Competence",
-            "CompositeCompetence",
             "NiveauCompetence",
             "ApprentissageCritique",
             "Parcours",
