@@ -1,6 +1,6 @@
 % # context: data, utils
 % # Creates cover page for official document
-%% set num=data.number|int
+%% set num=data.getNumber()
 \thispagestyle{empty}
 \begin{tikzpicture}[remember picture,overlay,x=1cm,y=1cm]
   \node[inner sep=0pt,anchor=north west] (logo) at ($ (current page.north west)+(1.3,-.94) $) {\includegraphics[width=49.989mm]{assets/logo_ministere.png}};

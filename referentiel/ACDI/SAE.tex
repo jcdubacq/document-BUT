@@ -16,6 +16,9 @@
     %% for comp in targets
     %% if arianeList.append(['Compétence '+comp.number+' : '+comp.getShortname()])
     %% endif
+    %% else
+    %% if arianeList.append(['Activité transversale'])
+    %% endif
     %% endfor
     %% include 'TitleFragment.tex'
     \node[anchor=north west,text width={\xmarkfive}] (titredescriptif) at ($ (lastwest)+(2,-2) $) {
